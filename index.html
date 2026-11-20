@@ -1,0 +1,77 @@
+HTML
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>中醫超速學習特訓系統</title>
+    <style>
+        body {
+            font-family: "Microsoft JhengHei", sans-serif;
+            background-color: #f4f7f6;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+        .dashboard {
+            background: white;
+            padding: 35px 25px;
+            border-radius: 16px;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+            width: 90%;
+            max-width: 400px;
+            text-align: center;
+        }
+        h1 {
+            font-size: 1.6rem;
+            color: #2c3e50;
+            margin: 0 0 8px 0;
+        }
+        p {
+            font-size: 0.95rem;
+            color: #7f8c8d;
+            margin: 0 0 30px 0;
+        }
+        .menu-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        .menu-btn {
+            display: block;
+            text-decoration: none; /* 移除超連結底線 */
+            padding: 18px 20px;
+            border-radius: 10px;
+            font-size: 1.15rem;
+            font-weight: bold;
+            color: white;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 3px 8px rgba(0,0,0,0.1);
+        }
+        .menu-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 12px rgba(0,0,0,0.15);
+        }
+        /* 為三個科目設定不同代表色 */
+        .btn-herbs { background-color: #27ae60; }
+        .btn-bagang { background-color: #2c3e50; }
+        .btn-meridian { background-color: #2980b9; }
+    </style>
+</head>
+<body>
+
+    <div class="dashboard">
+        <h1>中醫特訓系統</h1>
+        <p>請選擇今日的提取記憶科目</p>
+
+        <div class="menu-list">
+            <a href="herbs.html" class="menu-btn btn-herbs">🌿 中藥性味歸經 (MC)</a>
+            <a href="bagang.html" class="menu-btn btn-bagang">☯️ 八綱辨證臨床特訓</a>
+            <a href="meridian.html" class="menu-btn btn-meridian">🧭 十二正經導航特訓</a>
+        </div>
+    </div>
+
+</body>
+</html>

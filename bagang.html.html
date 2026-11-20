@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>八綱辨證 臨床特訓</title>
+    <style>
+        body {
+            font-family: "Microsoft JhengHei", sans-serif;
+            background-color: #f0f4f8;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .card {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            width: 90%;
+            max-width: 450px;
+            text-align: center;
+        }
+        h1 { font-size: 1.1rem; color: #7f8c8d; margin-bottom: 10px; }
+        /* 症狀顯示區，用引號包裝感覺像病歷 */
+        h2 { 
+            font-size: 1.4rem; color: #2c3e50; margin: 0 0 25px; 
+            line-height: 1.5; text-align: justify;
+            background: #eef2f5; padding: 15px; border-radius: 8px;
+            border-left: 5px solid #3498db;
+        }
+        
+        .category-label {
+            font-weight: bold; color: #34495e; margin-bottom: 8px; text-align: left;
+            display: block; font-size: 0.9rem;
+        }
+        
+        /* 診斷開關按鈕群組 */
+        .toggle-group {
+            display: flex; gap: 10px; margin-bottom: 20px;
+        }
+        .toggle-btn {
+            flex: 1; padding: 12px; font-size: 1.1rem; font-weight: bold;
+            background-color: #ecf0f1; color: #7f8c8d;
+            border: 2px solid #bdc3c7; border-radius: 6px; cursor: pointer;
+            transition: all 0.2s;
+        }
+        /* 選中時的狀態 */
+        .toggle-btn.selected {
+            background-color: #3498db; color: white; border-color: #2980b9;
+        }
+        /* 答對時的狀態 */
+        .toggle-btn.correct {
+            background-color: #27ae60 !important; color: white !important; border-color: #2196F3 !important;
+        }
+        /* 答錯時的狀態 */
+        .toggle-btn.wrong {
+            background-color: #e74c3c !important; color: white !important; border-color: #c0392b !important;
+        }
+        
+        .action-btn {
+            background-color: #2c3e50; color: white; border: none; 
+            padding: 14px 20px; border-radius: 6px; font-size: 1.1rem; 
+            cursor: pointer; width: 100%; font-weight: bold; margin-top: 10px;
+        }
+        .action-btn:hover { background-color: #1a252f; }
+        
+        #nextBtn { background-color: #27ae60; display: none; }
+        #nextBtn:hover { background-color: #2ecc71; }
+        
+        #feedback { margin: 15px 0; font-weight: bold; font-size: 1.1rem; min-height: 24px; }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        <h1>請根據症狀，進行八綱辨證</h1>
+        <h2 id="symptomsDisplay">載入中...</h2>
+
+        <div>
+            <span class="category-label">1. 病位深淺</span>
+            <div class="toggle-group" id="groupLocation">
+                <button class="toggle-btn" onclick="selectBtn(this, 'location', '表')">表證</button>
+                <button class="toggle-btn" onclick="selectBtn(this, 'location', '裡')">裡證</button>
+            </div>
+        </div>
+
+        <div>
+            <span class="category-label">2. 疾病性質</span>
+            <div class="toggle-group" id="groupNature">
+                <button class="toggle-btn" onclick="selectBtn(this, 'nature', '寒')">寒證</button>
+                <button class="toggle-btn" onclick="selectBtn(this, 'nature', '熱')">熱證</button>
+            </div>
+        </div>
+
+        <div>
+            <span class="category-label">3. 邪正盛衰</span>
+            <div class="toggle-group" id="groupStrength">
+                <button class="toggle-btn" onclick="selectBtn(this, 'strength', '虛')">虛證</button>
+                <button class="toggle-btn" onclick="selectBtn(this, 'strength', '實')">實證</button>
+            </div>
+        </div>
+
+        <div id="feedback"></div>
+        <button id="submitBtn" class="action-btn" onclick="checkDiagnosis()">送出診斷</button>
+        <button id="nextBtn" class="action-btn" onclick="loadCase()">下一位病人 ➔</button>
+    </div>
+
+    <script>
+        // 1. 醫案資料庫 (涵蓋典型八綱症狀)
+        const caseDatabase = [
+            { symptoms: "惡寒重，發熱輕，頭項強痛，無汗，脈浮緊", location: "表", nature: "寒", strength: "實" },
+            { symptoms: "發熱重，惡風，有汗，微渴，舌尖紅，脈浮數", location: "表", nature: "熱", strength: "實" },
+            { symptoms: "壯熱，大汗出，大渴引飲，面赤，脈洪大", location: "裡", nature: "熱", strength: "實" },
+            { symptoms: "畏寒肢冷，神疲乏力，少氣懶言，大便溏薄，脈微細", location: "裡", nature: "寒", strength: "虛" },
+            { symptoms: "發熱，腹痛拒按，便祕，舌紅苔黃厚，脈沉數", location: "裡", nature: "熱", strength: "實" },
+            { symptoms: "午後潮熱，盜汗，五心煩熱，舌紅少苔，脈細數", location: "裡", nature: "熱", strength: "虛" },
+            { symptoms: "自汗出，動則加重，易感冒，氣短，脈虛無力", location: "表", nature: "寒", strength: "虛" } // 表虛
+        ];
+
+        let currentCase = {};
+        let userSelection = { location: "", nature: "", strength: "" };
+
+        // 2. 按鈕單選邏輯 (同一個群組只能選一個)
+        function selectBtn(btnElement, category, value) {
+            // 如果已經在顯示答案階段，不允許更改
+            if (document.getElementById("nextBtn").style.display === "block") return;
+
+            // 移除同群組其他按鈕的選取狀態
+            const group = btnElement.parentElement;
+            const buttons = group.getElementsByClassName("toggle-btn");
+            for (let b of buttons) {
+                b.classList.remove("selected");
+            }
+            
+            // 替當前點擊的按鈕加上選取狀態，並記錄到物件中
+            btnElement.classList.add("selected");
+            userSelection[category] = value;
+        }
+
+        // 3. 載入新醫案
+        function loadCase() {
+            // 隨機抽選醫案
+            const randomIndex = Math.floor(Math.random() * caseDatabase.length);
+            currentCase = caseDatabase[randomIndex];
+            document.getElementById("symptomsDisplay").textContent = currentCase.symptoms;
+
+            // 重置所有選項狀態與變數
+            userSelection = { location: "", nature: "", strength: "" };
+            const allBtns = document.getElementsByClassName("toggle-btn");
+            for (let b of allBtns) {
+                b.classList.remove("selected", "correct", "wrong");
+            }
+
+            document.getElementById("feedback").textContent = "";
+            document.getElementById("submitBtn").style.display = "block";
+            document.getElementById("nextBtn").style.display = "none";
+        }
+
+        // 4. 驗證診斷結果
+        function checkDiagnosis() {
+            // 檢查是否三個維度都選了
+            if (!userSelection.location || !userSelection.nature || !userSelection.strength) {
+                alert("請完成表裡、寒熱、虛實三個維度的診斷！");
+                return;
+            }
+
+            let allCorrect = true;
+            const categories = ['location', 'nature', 'strength'];
+
+            categories.forEach(cat => {
+                // 找出該類別下被使用者選中的按鈕，與應該要是正確答案的按鈕
+                const group = document.getElementById("group" + cat.charAt(0).toUpperCase() + cat.slice(1));
+                const buttons = group.getElementsByClassName("toggle-btn");
+                
+                for (let btn of buttons) {
+                    const isUserSelected = btn.classList.contains("selected");
+                    const isActuallyCorrect = btn.textContent.includes(currentCase[cat]);
+
+                    if (isUserSelected && isActuallyCorrect) {
+                        btn.classList.add("correct");
+                    } else if (isUserSelected && !isActuallyCorrect) {
+                        btn.classList.add("wrong");
+                        allCorrect = false;
+                    } else if (!isUserSelected && isActuallyCorrect) {
+                        // 如果使用者沒選，但它是正確答案，我們把它標示出來
+                        btn.classList.add("correct");
+                        btn.style.opacity = "0.6"; // 用稍微透明的方式提示這是正確答案
+                    }
+                }
+            });
+
+            // 顯示回饋文字
+            const feedbackEl = document.getElementById("feedback");
+            if (allCorrect) {
+                feedbackEl.textContent = `✅ 診斷正確！此為【${currentCase.location}${currentCase.nature}${currentCase.strength}證】`;
+                feedbackEl.style.color = "#27ae60";
+            } else {
+                feedbackEl.textContent = `❌ 診斷有誤，正確應為【${currentCase.location}${currentCase.nature}${currentCase.strength}證】`;
+                feedbackEl.style.color = "#e74c3c";
+            }
+
+            document.getElementById("submitBtn").style.display = "none";
+            document.getElementById("nextBtn").style.display = "block";
+        }
+
+        // 網頁載入完成時，自動抽第一題
+        window.onload = loadCase;
+    </script>
+</body>
+</html>
