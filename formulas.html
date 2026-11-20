@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>方劑圖像記憶特訓</title>
+    <style>
+        body {
+            font-family: "Microsoft JhengHei", sans-serif;
+            background-color: #f4f7f6;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px 0;
+            box-sizing: border-box;
+        }
+        .card {
+            background: white;
+            padding: 25px;
+            border-radius: 14px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            width: 92%;
+            max-width: 500px;
+            text-align: center;
+        }
+        h1 {
+            font-size: 1rem;
+            color: #7f8c8d;
+            margin: 0 0 15px 0;
+        }
+        .image-box {
+            width: 100%;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+            margin-bottom: 18px;
+            cursor: pointer;
+            background-color: #eef2f5;
+        }
+        .image-box img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+        .prompt-text {
+            font-size: 0.95rem;
+            color: #7f8c8d;
+            margin-bottom: 18px;
+        }
+        .answer-box {
+            display: none;
+            text-align: left;
+            background-color: #fdfaf5;
+            border-left: 5px solid #e67e22;
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 18px;
+            line-height: 1.6;
+        }
+        .formula-title {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #d35400;
+            margin: 0 0 10px 0;
+        }
+        .info-row {
+            margin-bottom: 8px;
+            font-size: 0.98rem;
+            color: #2c3e50;
+        }
+        .info-row:last-child {
+            margin-bottom: 0;
+        }
+        .info-label {
+            font-weight: bold;
+            color: #8e44ad;
+        }
+        .action-btn {
+            background-color: #e67e22;
+            color: white;
+            border: none;
+            padding: 14px 20px;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            width: 100%;
+            font-weight: bold;
+            transition: background-color 0.2s;
+        }
+        .action-btn:hover {
+            background-color: #d35400;
+        }
+        #nextBtn {
+            background-color: #27ae60;
+            display: none;
+        }
+        #nextBtn:hover {
+            background-color: #2ecc71;
+        }
+        .back-link {
+            display: inline-block;
+            margin-top: 20px;
+            color: #7f8c8d;
+            text-decoration: none;
+            font-size: 0.9rem;
+        }
+        .back-link:hover {
+            color: #2c3e50;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        <h1>睇圖提取：呢條係咩方劑？成份同主治係咩？</h1>
+
+        <div class="image-box" onclick="revealAnswer()">
+            <img id="formulaImg" src="" alt="方劑聯想圖">
+        </div>
+
+        <div id="promptText" class="prompt-text">
+            💡 先喺腦入面諗出「方名、成份、功用、證型」，再撳下面揭曉答案
+        </div>
+
+        <div id="answerBox" class="answer-box">
+            <div id="formulaName" class="formula-title"></div>
+            <div class="info-row"><span class="info-label">🌿 成份：</span><span id="formulaIngredients"></span></div>
+            <div class="info-row"><span class="info-label">🎯 功用：</span><span id="formulaFunction"></span></div>
+            <div class="info-row"><span class="info-label">🩺 主治證型：</span><span id="formulaSyndrome"></span></div>
+            <div class="info-row"><span class="info-label">🍵 用法重點：</span><span id="formulaUsage"></span></div>
+        </div>
+
+        <button id="revealBtn" class="action-btn" onclick="revealAnswer()">揭曉答案 👀</button>
+        <button id="nextBtn" class="action-btn" onclick="loadNextFormula()">下一條方劑 ➔</button>
+
+        <a href="index.html" class="back-link">← 返回主選單</a>
+    </div>
+
+    <script>
+        // 1. 方劑圖庫資料（對應 images 資料夾內嘅 7 張圖）
+        const formulaDatabase = [
+            {
+                name: "白虎湯",
+                image: "images/baihu.jpg",
+                ingredients: "石膏、知母、炙甘草、粳米",
+                func: "清熱生津",
+                syndrome: "陽明氣分熱盛證（大熱、大汗、大渴、脈洪大）",
+                usage: "水煎，煮至米熟湯成，去滓溫服。"
+            },
+            {
+                name: "桂枝湯",
+                image: "images/guizhi.jpg",
+                ingredients: "桂枝、芍藥、炙甘草、生薑、大棗",
+                func: "解肌發表，調和營衛",
+                syndrome: "外感風寒表虛證（發熱頭痛、汗出惡風、脈浮緩）",
+                usage: "溫服，服後啜熱稀粥以助藥力，溫覆令微汗出。"
+            },
+            {
+                name: "麻黃湯",
+                image: "images/mahuang.jpg",
+                ingredients: "麻黃、桂枝、杏仁、炙甘草",
+                func: "發汗解表，宣肺平喘",
+                syndrome: "外感風寒表實證（惡寒發熱、頭身疼痛、無汗而喘、脈浮緊）",
+                usage: "先煮麻黃去上沫，再入諸藥同煎，溫服覆取微汗。"
+            },
+            {
+                name: "理中湯（理中丸）",
+                image: "images/lizhong.jpg",
+                ingredients: "人參、乾薑、白朮、炙甘草",
+                func: "溫中祛寒，補氣健脾",
+                syndrome: "脾胃虛寒證（脘腹綿綿作痛、畏寒肢冷、便溏不渴、脈沉細）",
+                usage: "水煎溫服（或作丸服，服湯後飲熱粥助陽氣）。"
+            },
+            {
+                name: "大承氣湯",
+                image: "images/dachengqi.jpg",
+                ingredients: "大黃、厚朴、枳實、芒硝",
+                func: "峻下熱結",
+                syndrome: "陽明腑實證（痞、滿、燥、實四證俱全，潮熱譫語、脈沉實）",
+                usage: "先煮厚朴、枳實，後下大黃，最後溶入芒硝溫服；得下餘勿服。"
+            },
+            {
+                name: "四逆湯",
+                image: "images/sini.jpg",
+                ingredients: "附子、乾薑、炙甘草",
+                func: "回陽救逆",
+                syndrome: "少陰病心腎陽虛欲脫證（四肢厥逆、惡寒蜷臥、下利清穀、脈微細）",
+                usage: "水煎溫服（臨床用附子須先煎久煎以減毒）。"
+            },
+            {
+                name: "苓桂朮甘湯",
+                image: "images/lingguizhugan.jpg",
+                ingredients: "茯苓、桂枝、白朮、炙甘草",
+                func: "溫陽化飲，健脾利濕",
+                syndrome: "中陽不足之痰飲證（胸脅支滿、目眩心悸、短氣而咳、脈弦滑）",
+                usage: "水煎溫服，小便則利。"
+            }
+        ];
+
+        // 建立不重複抽題清單（抽完 7 條先重新洗牌）
+        let deck = [];
+
+        function shuffleDeck() {
+            deck = [...formulaDatabase];
+            for (let i = deck.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [deck[i], deck[j]] = [deck[j], deck[i]];
+            }
+        }
+
+        function loadNextFormula() {
+            if (deck.length === 0) {
+                shuffleDeck();
+            }
+            const current = deck.pop();
+
+            // 顯示圖片同重設隱藏狀態
+            document.getElementById("formulaImg").src = current.image;
+            document.getElementById("formulaImg").alt = current.name;
+
+            document.getElementById("formulaName").textContent = current.name;
+            document.getElementById("formulaIngredients").textContent = current.ingredients;
+            document.getElementById("formulaFunction").textContent = current.func;
+            document.getElementById("formulaSyndrome").textContent = current.syndrome;
