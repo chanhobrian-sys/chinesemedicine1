@@ -2,184 +2,381 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-<meta name="apple-mobile-web-app-capable" content="yes">
-	<meta name="mobile-web-app-capable" content="yes">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>十二正經 導航特訓</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <link rel="manifest" href="manifest.json">
+    <title>十二經絡與特定穴特訓</title>
     <style>
         body {
-            font-family: "Microsoft JhengHei", sans-serif;
-            background-color: #eef2f5;
+            font-family: "Microsoft JhengHei", -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: #f4f7f6;
             display: flex;
             justify-content: center;
-            align-items: center;
-            height: 100vh;
+            align-items: flex-start;
+            min-height: 100vh;
             margin: 0;
+            padding: 16px 0 32px 0;
+            box-sizing: border-box;
         }
         .card {
             background: white;
-            padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            width: 90%;
-            max-width: 400px;
+            padding: 22px 18px;
+            border-radius: 16px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            width: 92%;
+            max-width: 520px;
+            box-sizing: border-box;
+        }
+        .header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .badge {
+            background-color: #e8f4fd;
+            color: #2980b9;
+            font-size: 0.85rem;
+            font-weight: bold;
+            padding: 4px 10px;
+            border-radius: 20px;
+        }
+        .meridian-title {
+            font-size: 1.6rem;
+            font-weight: bold;
+            color: #2c3e50;
             text-align: center;
+            margin: 8px 0 18px 0;
+            padding-bottom: 12px;
+            border-bottom: 2px solid #eef2f5;
         }
-        h1 { font-size: 1rem; color: #7f8c8d; margin-bottom: 5px; }
-        h2 { font-size: 2.2rem; color: #2980b9; margin: 0 0 20px; letter-spacing: 2px; }
-        
-        .input-group { margin-bottom: 15px; text-align: left; }
-        label { display: block; font-weight: bold; margin-bottom: 5px; color: #34495e; }
-        input {
-            width: 100%; padding: 12px; border: 1px solid #ccc; 
-            border-radius: 6px; box-sizing: border-box; font-size: 1rem;
-            transition: all 0.3s;
+        .quiz-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px 14px;
+            margin-bottom: 20px;
         }
-        
-        input.correct { border-color: #27ae60; background-color: #e9f7ef; color: #27ae60; font-weight: bold;}
-        input.wrong { border-color: #e74c3c; background-color: #fceae8; color: #e74c3c; }
-        
-        .answer-reveal { font-size: 0.9rem; color: #e74c3c; margin-top: 5px; display: none; }
-        
+        .quiz-item {
+            display: flex;
+            flex-direction: column;
+        }
+        .quiz-item.full-width {
+            grid-column: span 2;
+        }
+        .quiz-label {
+            font-size: 0.9rem;
+            font-weight: bold;
+            color: #555;
+            margin-bottom: 5px;
+        }
+        select {
+            width: 100%;
+            padding: 10px 8px;
+            font-size: 1rem;
+            border: 2px solid #dce4ec;
+            border-radius: 8px;
+            background-color: #fff;
+            color: #2c3e50;
+            font-family: inherit;
+            appearance: auto;
+            transition: border-color 0.2s, background-color 0.2s;
+        }
+        select:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+        select.correct {
+            border-color: #27ae60;
+            background-color: #eafaf1;
+            color: #1e8449;
+            font-weight: bold;
+        }
+        select.wrong {
+            border-color: #e74c3c;
+            background-color: #fdedec;
+            color: #c0392b;
+            font-weight: bold;
+        }
+        .correction {
+            font-size: 0.85rem;
+            color: #e74c3c;
+            font-weight: bold;
+            margin-top: 4px;
+            min-height: 18px;
+        }
+        .score-banner {
+            display: none;
+            text-align: center;
+            padding: 12px;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            margin-bottom: 16px;
+        }
+        .score-high {
+            background-color: #eafaf1;
+            color: #1e8449;
+            border: 1px solid #a9dfbf;
+        }
+        .score-low {
+            background-color: #fef9e7;
+            color: #b7950b;
+            border: 1px solid #f9e79f;
+        }
         .action-btn {
-            background-color: #2980b9; color: white; border: none; 
-            padding: 14px 20px; border-radius: 6px; font-size: 1.1rem; 
-            cursor: pointer; width: 100%; margin-top: 15px; font-weight: bold;
+            background-color: #2980b9;
+            color: white;
+            border: none;
+            padding: 14px 20px;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            width: 100%;
+            font-weight: bold;
+            transition: background-color 0.2s;
         }
-        .action-btn:hover { background-color: #2471a3; }
-        
-        #nextBtn { background-color: #27ae60; display: none; }
-        #nextBtn:hover { background-color: #2ecc71; }
-        
-        #feedback { margin-top: 15px; font-weight: bold; font-size: 1.1rem; min-height: 24px; }
+        .action-btn:hover {
+            background-color: #1f6391;
+        }
+        #nextBtn {
+            background-color: #27ae60;
+            display: none;
+        }
+        #nextBtn:hover {
+            background-color: #219150;
+        }
+        .back-link {
+            display: block;
+            text-align: center;
+            margin-top: 18px;
+            color: #7f8c8d;
+            text-decoration: none;
+            font-size: 0.95rem;
+        }
+        .back-link:hover {
+            color: #2c3e50;
+        }
     </style>
 </head>
 <body>
 
     <div class="card">
-        <h1>經絡循行與特定穴提取</h1>
-        <h2 id="meridianName">載入中...</h2>
-
-        <div class="input-group">
-            <label for="inputDirection">走向 (填寫：胸走手/手走頭/頭走足/足走腹)</label>
-            <input type="text" id="inputDirection" autocomplete="off" placeholder="例如：胸走手">
-            <div id="ansDirection" class="answer-reveal"></div>
+        <div class="header-row">
+            <span class="badge">十二正經・特定穴特訓</span>
+            <span id="progressText" class="badge" style="background:#f0f3f4; color:#555;">1 / 12</span>
         </div>
 
-        <div class="input-group">
-            <label for="inputJingWell">井穴 (經氣所出)</label>
-            <input type="text" id="inputJingWell" autocomplete="off" placeholder="例如：少商">
-            <div id="ansJingWell" class="answer-reveal"></div>
+        <div id="meridianName" class="meridian-title">載入中...</div>
+
+        <div class="quiz-grid" id="quizContainer">
+            <!-- 由 JS 動態生成 10 條下拉選單 -->
         </div>
 
-        <div class="input-group">
-            <label for="inputNext">交接經脈 (流注下一條)</label>
-            <input type="text" id="inputNext" autocomplete="off" placeholder="例如：手陽明大腸經">
-            <div id="ansNext" class="answer-reveal"></div>
-        </div>
+        <div id="scoreBanner" class="score-banner"></div>
 
-        <div id="feedback"></div>
-        <button id="submitBtn" class="action-btn" onclick="checkAnswers()">驗證導航</button>
-        <button id="nextBtn" class="action-btn" onclick="loadMeridian()">下一條經脈 ➔</button>
-	<a href="index.html" style="display:inline-block; margin-top:20px; color:#7f8c8d; text-decoration:none; font-size:0.9rem;">← 返回主選單</a>  
-  </div>
+        <button id="checkBtn" class="action-btn" onclick="checkAnswers()">核對答案 ✅</button>
+        <button id="nextBtn" class="action-btn" onclick="loadNextMeridian()">下一條經絡 ➔</button>
+
+        <a href="index.html" class="back-link" onclick="event.preventDefault(); window.location.href='index.html';">← 返回主選單</a>
+    </div>
 
     <script>
-        // 1. 十二正經資料庫 (已經將手陽明大腸經的空白錯誤修正)
-        const meridianDatabase = [
-            { name: "手太陰肺經", direction: "胸走手", jingWell: "少商", next: "手陽明大腸經" },
-            { name: "手陽明大腸經", direction: "手走頭", jingWell: "商陽", next: "足陽明胃經" },
-            { name: "足陽明胃經", direction: "頭走足", jingWell: "厲兌", next: "足太陰脾經" },
-            { name: "足太陰脾經", direction: "足走腹", jingWell: "隱白", next: "手少陰心經" },
-            { name: "手少陰心經", direction: "胸走手", jingWell: "少衝", next: "手太陽小腸經" }
+        const meridians = [
+            {
+                name: "手太陰肺經",
+                direction: "胸走手",
+                next: "手陽明大腸經",
+                jing: "少商", ying: "魚際", shu: "太淵", jing2: "經渠", he: "尺澤",
+                yuan: "太淵", luo: "列缺", xi: "孔最"
+            },
+            {
+                name: "手陽明大腸經",
+                direction: "手走頭",
+                next: "足陽明胃經",
+                jing: "商陽", ying: "二間", shu: "三間", jing2: "陽溪", he: "曲池",
+                yuan: "合谷", luo: "偏歷", xi: "溫溜"
+            },
+            {
+                name: "足陽明胃經",
+                direction: "頭走足",
+                next: "足太陰脾經",
+                jing: "厲兌", ying: "內庭", shu: "陷谷", jing2: "解溪", he: "足三里",
+                yuan: "衝陽", luo: "豐隆", xi: "梁丘"
+            },
+            {
+                name: "足太陰脾經",
+                direction: "足走腹（胸）",
+                next: "手少陰心經",
+                jing: "隱白", ying: "大都", shu: "太白", jing2: "商丘", he: "陰陵泉",
+                yuan: "太白", luo: "公孫", xi: "地機"
+            },
+            {
+                name: "手少陰心經",
+                direction: "胸走手",
+                next: "手太陽小腸經",
+                jing: "少衝", ying: "少府", shu: "神門", jing2: "靈道", he: "少海",
+                yuan: "神門", luo: "通里", xi: "陰郄"
+            },
+            {
+                name: "手太陽小腸經",
+                direction: "手走頭",
+                next: "足太陽膀胱經",
+                jing: "少澤", ying: "前谷", shu: "後溪", jing2: "陽谷", he: "小海",
+                yuan: "腕骨", luo: "支正", xi: "養老"
+            },
+            {
+                name: "足太陽膀胱經",
+                direction: "頭走足",
+                next: "足少陰腎經",
+                jing: "至陰", ying: "足通谷", shu: "束骨", jing2: "崑崙", he: "委中",
+                yuan: "京骨", luo: "飛揚", xi: "金門"
+            },
+            {
+                name: "足少陰腎經",
+                direction: "足走腹（胸）",
+                next: "手厥陰心包經",
+                jing: "湧泉", ying: "然谷", shu: "太溪", jing2: "復溜", he: "陰谷",
+                yuan: "太溪", luo: "大鍾", xi: "水泉"
+            },
+            {
+                name: "手厥陰心包經",
+                direction: "胸走手",
+                next: "手少陽三焦經",
+                jing: "中衝", ying: "勞宮", shu: "大陵", jing2: "間使", he: "曲澤",
+                yuan: "大陵", luo: "內關", xi: "郄門"
+            },
+            {
+                name: "手少陽三焦經",
+                direction: "手走頭",
+                next: "足少陽膽經",
+                jing: "關衝", ying: "液門", shu: "中渚", jing2: "支溝", he: "天井",
+                yuan: "陽池", luo: "外關", xi: "會宗"
+            },
+            {
+                name: "足少陽膽經",
+                direction: "頭走足",
+                next: "足厥陰肝經",
+                jing: "足竅陰", ying: "俠溪", shu: "足臨泣", jing2: "陽輔", he: "陽陵泉",
+                yuan: "丘墟", luo: "光明", xi: "外丘"
+            },
+            {
+                name: "足厥陰肝經",
+                direction: "足走腹（胸）",
+                next: "手太陰肺經",
+                jing: "大敦", ying: "行間", shu: "太衝", jing2: "中封", he: "曲泉",
+                yuan: "太衝", luo: "蠡溝", xi: "中都"
+            }
         ];
 
-        let currentMeridian = {};
+        const fields = [
+            { key: "direction", label: "1. 流注方向", full: false },
+            { key: "next", label: "2. 下一條經絡", full: false },
+            { key: "jing", label: "3. 井穴", full: false },
+            { key: "ying", label: "4. 滎穴", full: false },
+            { key: "shu", label: "5. 輸穴", full: false },
+            { key: "jing2", label: "6. 經穴", full: false },
+            { key: "he", label: "7. 合穴", full: false },
+            { key: "yuan", label: "8. 原穴", full: false },
+            { key: "luo", label: "9. 絡穴", full: false },
+            { key: "xi", label: "10. 郄穴", full: false }
+        ];
 
-        function cleanString(str) {
-            return str.replace(/[ 、，,]/g, "").trim();
+        let deck = [];
+        let currentMeridian = null;
+        let completedCount = 0;
+
+        function shuffleArray(arr) {
+            const copy = [...arr];
+            for (let i = copy.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [copy[i], copy[j]] = [copy[j], copy[i]];
+            }
+            return copy;
         }
 
-        // 2. 隨機抽題邏輯
-        function loadMeridian() {
-            const randomIndex = Math.floor(Math.random() * meridianDatabase.length);
-            currentMeridian = meridianDatabase[randomIndex];
+        function getOptionsForField(key, correctAnswer) {
+            const allValues = [...new Set(meridians.map(m => m[key]))];
+            const distractors = shuffleArray(allValues.filter(v => v !== correctAnswer)).slice(0, 3);
+            return shuffleArray([correctAnswer, ...distractors]);
+        }
+
+        function loadNextMeridian() {
+            if (deck.length === 0) {
+                deck = shuffleArray(meridians);
+                completedCount = 0;
+            }
+            currentMeridian = deck.pop();
+            completedCount++;
+
             document.getElementById("meridianName").textContent = currentMeridian.name;
+            document.getElementById("progressText").textContent = `${completedCount} / 12`;
 
-            const inputs = ["inputDirection", "inputJingWell", "inputNext"];
-            const answers = ["ansDirection", "ansJingWell", "ansNext"];
-            
-            inputs.forEach(id => {
-                const el = document.getElementById(id);
-                el.value = "";
-                el.className = ""; 
-                el.disabled = false; 
-            });
-            
-            answers.forEach(id => {
-                document.getElementById(id).style.display = "none";
+            const container = document.getElementById("quizContainer");
+            container.innerHTML = "";
+
+            fields.forEach(field => {
+                const options = getOptionsForField(field.key, currentMeridian[field.key]);
+                const itemDiv = document.createElement("div");
+                itemDiv.className = "quiz-item" + (field.full ? " full-width" : "");
+
+                let optionsHtml = `<option value="">-- 請選擇 --</option>`;
+                options.forEach(opt => {
+                    optionsHtml += `<option value="${opt}">${opt}</option>`;
+                });
+
+                itemDiv.innerHTML = `
+                    <label class="quiz-label" for="sel_${field.key}">${field.label}</label>
+                    <select id="sel_${field.key}" data-key="${field.key}">
+                        ${optionsHtml}
+                    </select>
+                    <div id="corr_${field.key}" class="correction"></div>
+                `;
+                container.appendChild(itemDiv);
             });
 
-            document.getElementById("feedback").textContent = "";
-            document.getElementById("submitBtn").style.display = "block";
+            document.getElementById("scoreBanner").style.display = "none";
+            document.getElementById("checkBtn").style.display = "block";
             document.getElementById("nextBtn").style.display = "none";
         }
 
-        // 3. 對答案邏輯
         function checkAnswers() {
-            const userDir = cleanString(document.getElementById("inputDirection").value);
-            const userJing = cleanString(document.getElementById("inputJingWell").value);
-            const userNext = cleanString(document.getElementById("inputNext").value);
+            let score = 0;
+            fields.forEach(field => {
+                const selectEl = document.getElementById(`sel_${field.key}`);
+                const corrEl = document.getElementById(`corr_${field.key}`);
+                const correctAns = currentMeridian[field.key];
 
-            let allCorrect = true;
+                selectEl.disabled = true;
+                if (selectEl.value === correctAns) {
+                    selectEl.classList.add("correct");
+                    corrEl.textContent = "";
+                    score++;
+                } else {
+                    selectEl.classList.add("wrong");
+                    corrEl.textContent = `正解：${correctAns}`;
+                }
+            });
 
-            // 檢查「走向」
-            if (userDir === currentMeridian.direction) {
-                document.getElementById("inputDirection").classList.add("correct");
+            const banner = document.getElementById("scoreBanner");
+            banner.style.display = "block";
+            if (score === 10) {
+                banner.className = "score-banner score-high";
+                banner.textContent = `🎉 滿分 10 / 10！呢條經絡完全掌握！`;
+            } else if (score >= 7) {
+                banner.className = "score-banner score-high";
+                banner.textContent = `👍 得分：${score} / 10，差少少就滿分！`;
             } else {
-                document.getElementById("inputDirection").classList.add("wrong");
-                document.getElementById("ansDirection").textContent = `正確答案：${currentMeridian.direction}`;
-                document.getElementById("ansDirection").style.display = "block";
-                allCorrect = false;
+                banner.className = "score-banner score-low";
+                banner.textContent = `💪 得分：${score} / 10，留意紅字正解再強化！`;
             }
 
-            // 檢查「井穴」
-            if (userJing === currentMeridian.jingWell) {
-                document.getElementById("inputJingWell").classList.add("correct");
-            } else {
-                document.getElementById("inputJingWell").classList.add("wrong");
-                document.getElementById("ansJingWell").textContent = `正確答案：${currentMeridian.jingWell}`;
-                document.getElementById("ansJingWell").style.display = "block";
-                allCorrect = false;
-            }
-
-            // 檢查「交接經脈」
-            if (currentMeridian.next.includes(userNext) && userNext.length >= 3) {
-                document.getElementById("inputNext").classList.add("correct");
-            } else {
-                document.getElementById("inputNext").classList.add("wrong");
-                document.getElementById("ansNext").textContent = `正確答案：${currentMeridian.next}`;
-                document.getElementById("ansNext").style.display = "block";
-                allCorrect = false;
-            }
-
-            const feedbackEl = document.getElementById("feedback");
-            if (allCorrect) {
-                feedbackEl.textContent = "✅ 導航數據完全正確！";
-                feedbackEl.style.color = "#27ae60";
-            } else {
-                feedbackEl.textContent = "❌ 空間定位有誤，請複習紅色標示處。";
-                feedbackEl.style.color = "#e74c3c";
-            }
-
-            document.getElementById("inputDirection").disabled = true;
-            document.getElementById("inputJingWell").disabled = true;
-            document.getElementById("inputNext").disabled = true;
-            document.getElementById("submitBtn").style.display = "none";
+            document.getElementById("checkBtn").style.display = "none";
             document.getElementById("nextBtn").style.display = "block";
         }
 
-        window.onload = loadMeridian;
+        window.onload = loadNextMeridian;
     </script>
 </body>
 </html>
