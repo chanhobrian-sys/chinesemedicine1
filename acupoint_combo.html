@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <link rel="manifest" href="manifest.json">
+    <title>針灸配穴法特訓 (40題)</title>
+    <style>
+        body {
+            font-family: "Microsoft JhengHei", -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: #f4f7f6;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            margin: 0;
+            padding: 16px 0 32px 0;
+            box-sizing: border-box;
+        }
+        .card {
+            background: white;
+            padding: 20px 18px;
+            border-radius: 16px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            width: 92%;
+            max-width: 520px;
+            box-sizing: border-box;
+        }
+        .header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        .badge {
+            background-color: #eafaf1;
+            color: #1e8449;
+            font-size: 0.85rem;
+            font-weight: bold;
+            padding: 4px 10px;
+            border-radius: 20px;
+        }
+        .filter-bar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-bottom: 16px;
+        }
+        .filter-btn {
+            border: 1px solid #d5dbdb;
+            background: #f8f9f9;
+            color: #555;
+            padding: 6px 10px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            font-family: inherit;
+        }
+        .filter-btn.active {
+            background: #1e8449;
+            color: white;
+            border-color: #1e8449;
+            font-weight: bold;
+        }
+        .question-box {
+            background-color: #f4fbf7;
+            border-left: 5px solid #1e8449;
+            padding: 14px;
+            border-radius: 8px;
+            font-size: 1.06rem;
+            font-weight: bold;
+            color: #2c3e50;
+            line-height: 1.55;
+            margin-bottom: 16px;
+        }
+        .options-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+        .option-btn {
+            text-align: left;
+            padding: 12px 14px;
+            border: 2px solid #dce4ec;
+            border-radius: 10px;
+            background: white;
+            color: #2c3e50;
+            font-size: 1rem;
+            cursor: pointer;
+            font-family: inherit;
+            line-height: 1.45;
+            transition: all 0.15s;
+        }
+        .option-btn:hover:not(:disabled) {
+            border-color: #1e8449;
+            background-color: #eafaf1;
+        }
+        .option-btn.correct {
+            border-color: #27ae60;
+            background-color: #eafaf1;
+            color: #1e8449;
+            font-weight: bold;
+        }
+        .option-btn.wrong {
+            border-color: #e74c3c;
+            background-color: #fdedec;
+            color: #c0392b;
+            font-weight: bold;
+        }
+        .explain-box {
+            display: none;
+            background-color: #fef9e7;
+            border-left: 5px solid #f1c40f;
+            padding: 12px 14px;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            color: #2c3e50;
+            line-height: 1.6;
+            margin-bottom: 16px;
+        }
+        .action-btn {
+            background-color: #1e8449;
+            color: white;
+            border: none;
+            padding: 14px 20px;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            width: 100%;
+            font-weight: bold;
+            display: none;
+        }
+        .back-link {
+            display: block;
+            text-align: center;
+            margin-top: 18px;
+            color: #7f8c8d;
+            text-decoration: none;
+            font-size: 0.95rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="header-row">
+            <span class="badge">針灸配穴法特訓 (40題)</span>
+            <span id="scoreText" class="badge" style="background:#f0f3f4; color:#555;">答對：0 / 0</span>
+        </div>
+
+        <div class="filter-bar">
+            <button class="filter-btn active" onclick="setCategory('全部', this)">全部 (40)</button>
+            <button class="filter-btn" onclick="setCategory('配穴法則', this)">配穴法則</button>
+            <button class="filter-btn" onclick="setCategory('經典穴組', this)">經典穴組</button>
+            <button class="filter-btn" onclick="setCategory('特定穴運用', this)">特定穴運用</button>
+            <button class="filter-btn" onclick="setCategory('辨證配穴', this)">辨證配穴</button>
+        </div>
+
+        <div id="questionText" class="question-box">載入中...</div>
+        <div id="optionsContainer" class="options-list"></div>
+        <div id="explainBox" class="explain-box"></div>
+
+        <button id="nextBtn" class="action-btn" onclick="loadQuestion()">下一題 ➔</button>
+        <a href="index.html" class="back-link" onclick="event.preventDefault(); window.location.href='index.html';">← 返回主選單</a>
+    </div>
+
+    <script>
+        const comboBank = [
+            {
+                cat: "配穴法則",
+                q: "「遠近配穴」在針灸處方中的核心思路是：",
+                options: [
+                    "病變局部或鄰近穴位 ＋ 循經遠端穴位相配，兼顧局部通絡與遠端調節",
+                    "只針病灶最痛點，完全不取四肢遠端穴位",
+                    "只取左右對稱穴位，不理會病位遠近",
+                    "只用背部俞穴，不用胸腹穴位"
+                ],
+                ans: 0,
+                exp: "遠近配穴係最常用基礎配穴法：近部取穴直接疏通局部經氣，遠部循經取穴引氣下行或加強遠端調節（如前額頭痛配印堂／攢竹＋合谷）。"
+            },
+            {
+                cat: "配穴法則",
+                q: "下列哪項屬於典型的「前後配穴（腹背陰陽配穴）」？",
+                options: [
+                    "肺俞（背腰部）配 中府（胸前部）",
+                    "合谷（手部）配 太衝（足部）",
+                    "尺澤（肘部）配 孔最（前臂）",
+                    "列缺（肺經絡穴）配 合谷（大腸經原穴）"
+                ],
+                ans: 0,
+                exp: "前部胸腹穴位（如募穴中府、中脘、關元）與後部腰背穴位（如俞穴肺俞、胃俞、腎俞）相配，屬前後配穴，體現陰陽相濟、前後呼應。"
+            },
+            {
+                cat: "配穴法則",
+                q: "「上下配穴」常見於調節氣血升降與上下協調，下列哪組最能體現此法？",
+                options: [
+                    "內關（上肢）配 公孫（下肢）",
+                    "中脘（腹部）配 胃俞（背部）",
+                    "印堂（頭面）配 太陽（頭面）",
+                    "曲池（手陽明）配 尺澤（手太陰）"
+                ],
+                ans: 0,
+                exp: "上肢穴位與下肢穴位相配即為上下配穴；內關通陰維脈、公孫通衝脈，一上一下相合，主治心、胸、胃疾患。"
+            },
+            {
+                cat: "配穴法則",
+                q: "「表裏配穴」是將陰經與陽經相表裏的兩條經脈穴位相配，下列哪組符合表裏配穴？",
+                options: [
+                    "太淵（手太陰肺經）配 偏歷（手陽明大腸經）",
+                    "足三里（足陽明）配 曲池（手陽明）",
+                    "百會（督脈）配 關元（任脈）",
+                    "太陽（經外奇穴）配 印堂（督脈）"
+                ],
+                ans: 0,
+                exp: "肺與大腸相表裏，太淵為肺經原穴，偏歷為大腸經絡穴，兩者屬表裏經相配（原絡配穴）。"
+            },
+            {
+                cat: "配穴法則",
+                q: "「左右配穴」在臨床上有兩大常見用法，分別是：",
+                options: [
+                    "雙側同名穴同取（如雙側足三里）以加強療效，或「左病取右、右病取左」（巨刺／繆刺）",
+                    "只針左側穴位，永遠不針右側",
+                    "必須同側上下配穴，不可左右交叉",
+                    "只適用於頭頂正中線疾病"
+                ],
+                ans: 0,
+                exp: "人體經絡左右對稱，內臟病常雙側同取增強感傳；偏側肢體或面癱／經筋病亦常交叉取對側穴位疏通經氣。"
+            },
+            {
+                cat: "配穴法則",
+                q: "治療胃痛時，選用「中脘（腹部近取）＋ 足三里（下肢遠取）」，同時體現了哪兩種配穴法？",
+                options: [
+                    "遠近配穴 兼 表裏經（任脈與足陽明胃經）配合",
+                    "純粹左右同名穴配穴",
+                    "只屬背部俞穴配穴",
+                    "只屬井穴急救配穴"
+                ],
+                ans: 0,
+                exp: "中脘在胃脘局部，足三里在膝下遠端，一近一遠；且中脘為胃之募穴，足三里為胃經合穴／下合穴，共調胃腑氣機。"
+            },
+            {
+                cat: "配穴法則",
+                q: "治療面癱（口眼喎斜）時，取局部「地倉、頰車」配遠端「合谷」，所依據的配穴原則主要是：",
+                options: [
+                    "遠近配穴 ＋ 循經取穴（「面口合谷收」）",
+                    "前後俞募配穴",
+                    "八脈交會穴配穴",
+                    "只取本經郄穴"
+                ],
+                ans: 0,
+                exp: "地倉、頰車在面部病所局部取穴，合谷為手陽明大腸經原穴，經脈上行入面口，體現遠近相配與循經取穴。"
+            },
+            {
+                cat: "配穴法則",
+                q: "治療腰痛時，取「腎俞、大腸俞（腰部局部）」配「委中（膕窩遠端）」，體現的是：",
+                options: [
+                    "遠近配穴 ＋ 「腰背委中求」循經遠取",
+                    "左右交叉巨刺法",
+                    "胸腹募穴配穴",
+                    "只取井穴放血"
+                ],
+                ans: 0,
+                exp: "腎俞、大腸俞近部疏通腰部經氣，委中為足太陽膀胱經合穴，循經遠取善治腰背痛。"
+            },
+            {
+                cat: "配穴法則",
+                q: "「本經配穴法」是指：",
+                options: [
+                    "某一臟腑經脈發生病變時，只選用該病變本經上的兩個或以上穴位相配",
+                    "必須同時選用三條以上不同經脈",
+                    "只選用經外奇穴",
+                    "只選用背俞穴配腹募穴"
+                ],
+                ans: 0,
+                exp: "例如肺熱咳嗽取本經合穴「尺澤」配本經郄穴「孔最」，即為本經配穴法。"
+            },
+            {
+                cat: "配穴法則",
+                q: "治療痛經時，取下腹部「關元、中極」配腰骶部「次髎、腎俞」，體現的是：",
+                options: [
+                    "前後配穴（前腹後背相應）",
+                    "原絡配穴",
+                    "開四關配穴",
+                    "八會穴配穴"
+                ],
+                ans: 0,
+                exp: "關元、中極在少腹前部，次髎、腎俞在腰骶後部，一前一後協同調理衝任胞宮。"
+            },
+            {
+                cat: "經典穴組",
+                q: "臨床常用「合谷 ＋ 太衝」（俗稱「開四關」），其主要協同作用偏重於：",
+                options: [
+                    "鎮靜安神、平肝熄風、行氣活血、通絡止痛",
+                    "溫陽救逆、回陽固脫",
+                    "升陽舉陷、補中益氣",
+                    "滋陰潛陽、退虛熱"
+                ],
+                ans: 0,
+                exp: "合谷屬手陽明大腸經（偏氣），太衝屬足厥陰肝經（偏血）；一氣一血、一升一降，善調全身氣血、平肝熄風、止痛。"
+            },
+            {
+                cat: "經典穴組",
+                q: "八脈交會穴中，「公孫 ＋ 內關」相配（公孫通衝脈、內關通陰維脈），主治範圍主要是：",
+                options: [
+                    "心、胸、胃疾患（如胃痛、嘔吐、心悸、胸悶）",
+                    "頭項強痛、腰背脊柱病",
+                    "目外眥、耳後、肩頸側痛",
+                    "咽喉腫痛、咳嗽氣喘"
+                ],
+                ans: 0,
+                exp: "歌訣：「公孫衝脈胃心胸，內關陰維下總同。」兩穴上下相配，為調理心胸胃疾第一要組。"
+            },
+            {
+                cat: "經典穴組",
+                q: "八脈交會穴中，「列缺 ＋ 照海」相配（列缺通任脈、照海通陰蹻脈），主治範圍主要是：",
+                options: [
+                    "肺系、咽喉、胸膈及陰虛失眠等病證",
+                    "腰背脊柱強痛及外感表證",
+                    "少腹冷痛疝氣",
+                    "下肢痿軟無力"
+                ],
+                ans: 0,
+                exp: "歌訣：「列缺任脈行肺系，陰蹻照海膈喉嚨。」善治咳嗽、咽痛、梅核氣及陰虛夜寐不安。"
+            },
+            {
+                cat: "經典穴組",
+                q: "八脈交會穴中，「後溪 ＋ 申脈」相配（後溪通督脈、申脈通陽蹻脈），主治範圍主要是：",
+                options: [
+                    "目內眥、頸項、耳、肩胛及腰背脊柱疾患",
+                    "胃脘脹痛、嘔吐吞酸",
+                    "月經不調、帶下病",
+                    "五更泄瀉、脾腎陽虛"
+                ],
+                ans: 0,
+                exp: "歌訣：「後溪督脈內眥頸，申脈陽蹻絡亦通。」兩穴均通陽經，善治項背腰脊強痛及頭痛。"
+            },
+            {
+                cat: "經典穴組",
+                q: "八脈交會穴中，「外關 ＋ 足臨泣」相配（外關通陽維脈、足臨泣通帶脈），主治範圍主要是：",
+                options: [
+                    "目銳眥（外眼角）、耳後、頰、頸、肩及脅肋部疾患",
+                    "心痛心悸、胃脘痛",
+                    "咽喉腫痛、肺系咳喘",
+                    "大便秘結、腹痛拒按"
+                ],
+                ans: 0,
+                exp: "歌訣：「外關陽維銳眥耳，足臨泣帶脈肩脅尋。」兩穴均屬少陽經，善疏少陽經氣、治偏頭痛、耳疾與脅痛。"
+            },
+            {
+                cat: "經典穴組",
+                q: "「四總穴歌」中：「肚腹三里留，腰背委中求，頭項尋列缺，面口合谷收。」其中治療急性腰背痛最常遠取：",
+                options: [
+                    "委中",
+                    "列缺",
+                    "足三里",
+                    "內關"
+                ],
+                ans: 0,
+                exp: "「腰背委中求」：委中為足太陽膀胱經合穴，膀胱經循行挾脊抵腰，故一切腰背痛皆可遠取委中。"
+            },
+            {
+                cat: "經典穴組",
+                q: "臨床常用「足三里 ＋ 三陰交」相配，其核心協同作用是：",
+                options: [
+                    "健脾益胃、補益氣血、滋補肝腎（後天與先天並調）",
+                    "清瀉心火、開竅醒神",
+                    "發汗解表、宣肺平喘",
+                    "峻下熱結、通腑瀉火"
+                ],
+                ans: 0,
+                exp: "足三里為胃經合穴，大補後天脾胃氣血；三陰交為足三陰經交會穴，統調肝脾腎三陰，兩者為補虛調經核心穴組。"
+            },
+            {
+                cat: "經典穴組",
+                q: "臨床常用「中脘 ＋ 天樞 ＋ 足三里」相配，最常用于治療哪一系統疾患？",
+                options: [
+                    "脾胃與腸道疾患（如胃痛、腹脹、泄瀉、便秘、消化不良）",
+                    "耳鳴耳聾、肝陽上亢",
+                    "咽喉腫痛、扁桃體炎",
+                    "小便淋澀、尿血"
+                ],
+                ans: 0,
+                exp: "中脘為胃募穴，天樞為大腸募穴，足三里為胃下合穴，三穴合用共調胃腸升降與運化。"
+            },
+            {
+                cat: "經典穴組",
+                q: "治療暈厥、中暑、高熱神昏等急症時，常用「水溝（人中）＋ 十二井穴（或十宣）」點刺放血，其主要作用是：",
+                options: [
+                    "開竅醒神、泄熱啟閉、回陽救逆",
+                    "健脾滲濕、溫陽化飲",
+                    "滋補肝腎、填精益髓",
+                    "疏肝解鬱、調經止痛"
+                ],
+                ans: 0,
+                exp: "水溝為督脈要穴，醒腦開竅；十宣／井穴位於四肢末端陰陽經交接處，點刺放血可迅速泄熱開竅。"
+            },
+            {
+                cat: "經典穴組",
+                q: "治療失眠（不寐）時，常選用「神門 ＋ 三陰交 ＋ 百會（或印堂／安眠）」，其配穴邏輯是：",
+                options: [
+                    "寧心安神（神門）、滋陰養血調肝脾腎（三陰交）、清利頭目鎮靜安神（百會／印堂）",
+                    "發汗解表、宣肺平喘",
+                    "通腑瀉下、清陽明熱",
+                    "溫陽利水、消腫止痛"
+                ],
+                ans: 0,
+                exp: "心藏神（神門），肝脾腎陰血不足則神不守舍（三陰交），頭為諸陽之會（百會／印堂），標本兼顧。"
+            },
+            {
+                cat: "特定穴運用",
+                q: "「原絡配穴」是指將先病經脈的原穴與何者相配？",
+                options: [
+                    "相表裏經脈的絡穴",
+                    "同一條經脈的井穴",
+                    "任脈與督脈的交會穴",
+                    "八會穴中的氣會穴"
+                ],
+                ans: 0,
+                exp: "原絡配穴（主客原絡配穴法）：以先病經脈之「原穴」為主，配相表裏經脈之「絡穴」為客。"
+            },
+            {
+                cat: "特定穴運用",
+                q: "若肺經先病（咳嗽氣喘），按「主客原絡配穴法」，應取肺經原穴「太淵」配大腸經絡穴：",
+                options: [
+                    "偏歷",
+                    "合谷",
+                    "曲池",
+                    "列缺"
+                ],
+                ans: 0,
+                exp: "太淵為手太陰肺經原穴，偏歷為手陽明大腸經絡穴（合谷是大腸經原穴，列缺是肺經絡穴，切勿撈亂）。"
+            },
+            {
+                cat: "特定穴運用",
+                q: "若脾經先病（腹脹便溏），按「主客原絡配穴法」，應取脾經原穴「太白」配胃經絡穴：",
+                options: [
+                    "豐隆",
+                    "足三里",
+                    "衝陽",
+                    "公孫"
+                ],
+                ans: 0,
+                exp: "太白為足太陰脾經原穴，豐隆為足陽明胃經絡穴（公孫是脾經絡穴，衝陽是胃經原穴）。"
+            },
+            {
+                cat: "特定穴運用",
+                q: "「俞募配穴」是臟腑病變極為常用的配穴法，下列哪組屬於正確的俞募配穴？",
+                options: [
+                    "胃俞 ＋ 中脘",
+                    "肺俞 ＋ 天樞",
+                    "腎俞 ＋ 膻中",
+                    "肝俞 ＋ 關元"
+                ],
+                ans: 0,
+                exp: "胃之背俞穴為胃俞，腹募穴為中脘（肺募中府、大腸募天樞、小腸募關元、心包募膻中、肝募期門、腎募京門）。"
+            },
+            {
+                cat: "特定穴運用",
+                q: "下列哪組屬於「心」的正確俞募配穴？",
+                options: [
+                    "心俞 ＋ 巨闕",
+                    "心俞 ＋ 中脘",
+                    "心俞 ＋ 天樞",
+                    "心俞 ＋ 期門"
+                ],
+                ans: 0,
+                exp: "心之背俞穴為心俞，腹募穴為巨闕（膻中為心包募穴）。"
+            },
+            {
+                cat: "特定穴運用",
+                q: "下列哪組屬於「肝」的正確俞募配穴？",
+                options: [
+                    "肝俞 ＋ 期門",
+                    "肝俞 ＋ 章門",
+                    "肝俞 ＋ 日月",
+                    "肝俞 ＋ 京門"
+                ],
+                ans: 0,
+                exp: "肝募期門，脾募章門，膽募日月，腎募京門，四個「門」字募穴係執業試必考分辨點！"
+            },
+            {
+                cat: "特定穴運用",
+                q: "急性疼痛或實證痛症時，除主穴外常加配同經「郄穴」，例如急性胃痛常配胃經郄穴：",
+                options: [
+                    "梁丘",
+                    "孔最",
+                    "養老",
+                    "中都"
+                ],
+                ans: 0,
+                exp: "梁丘為足陽明胃經郄穴，善治急性胃脘痛及乳癰（孔最為肺經郄穴，養老為小腸經郄穴，中都為肝經郄穴）。"
+            },
+            {
+                cat: "特定穴運用",
+                q: "治療六腑病變（如胃痛、腹痛、膽絞痛、小便不利）時，常配用「下合穴」，其中「大腸」的下合穴是：",
+                options: [
+                    "上巨虛",
+                    "下巨虛",
+                    "足三里",
+                    "委陽"
+                ],
+                ans: 0,
+                exp: "六腑下合穴口訣：「胃三里，大腸上巨虛，小腸下巨虛，三焦委陽，膀胱委中，膽陽陵泉。」"
+            },
+            {
+                cat: "特定穴運用",
+                q: "治療「腑會中脘、氣會膻中、血會膈俞、筋會陽陵泉」，此類選穴依據的是哪類特定穴？",
+                options: [
+                    "八會穴",
+                    "八脈交會穴",
+                    "十二原穴",
+                    "十五絡穴"
+                ],
+                ans: 0,
+                exp: "八會穴分別對應臟、腑、氣、血、筋、脈、骨、髓八種精氣所會聚之處。"
+            },
+            {
+                cat: "特定穴運用",
+                q: "根據《難經》五輸穴「虛則補其母，實則瀉其子」原則，肺經實熱證（肺屬金，金生水），可瀉肺經子穴：",
+                options: [
+                    "尺澤（肺經合水穴）",
+                    "太淵（肺經輸土穴）",
+                    "少商（肺經井木穴）",
+                    "經渠（肺經經金穴）"
+                ],
+                ans: 0,
+                exp: "肺屬金，金生水，尺澤為手太陰肺經合水穴（子穴），實證瀉其子，故肺實熱可瀉尺澤。"
+            },
+            {
+                cat: "辨證配穴",
+                q: "若病人屬「脾胃虛弱、食少便溏」，在胃痛基礎上加配「足三里、脾俞」，屬於：",
+                options: [
+                    "辨證配穴（針對脾胃虛弱病機加配補益脾胃穴位）",
+                    "單純左右配穴",
+                    "八會穴交會配穴",
+                    "交經巨刺配穴"
+                ],
+                ans: 0,
+                exp: "根據具體證候（本例為脾胃氣虛）加配針對病機之穴位，屬於辨證／隨證配穴。"
+            },
+            {
+                cat: "辨證配穴",
+                q: "若病人屬「肝火上炎致頭痛目赤」，除局部取穴及太衝外，常加配「行間」或「俠谿」，其配穴思路是：",
+                options: [
+                    "善用滎穴「滎主身熱」之性，清瀉肝膽實火",
+                    "利用合穴溫補脾陽",
+                    "利用井穴升舉下陷清陽",
+                    "利用輸穴專治體重節痛"
+                ],
+                ans: 0,
+                exp: "五輸穴中「滎主身熱」，肝經滎穴行間、膽經滎穴俠谿均擅長清瀉肝膽熱邪，體現隨證選穴與特定穴運用結合。"
+            },
+            {
+                cat: "辨證配穴",
+                q: "外感頭痛按經絡循行分經配穴時，「偏頭痛（少陽頭痛）」除局部率谷、太陽外，常遠配：",
+                options: [
+                    "外關、足臨泣（手足少陽經穴）",
+                    "合谷、內庭（陽明經穴）",
+                    "列缺、太淵（太陰經穴）",
+                    "後溪、崑崙（太陽經穴）"
+                ],
+                ans: 0,
+                exp: "分經辨證配穴：前額陽明頭痛配印堂、合谷、內庭；側頭少陽頭痛配太陽、率谷、外關、足臨泣；後頭太陽頭痛配天柱、後溪、崑崙；巔頂厥陰頭痛配百會、太衝。"
+            },
+            {
+                cat: "辨證配穴",
+                q: "外感頭痛中，「後枕部頭痛連及項背（太陽頭痛）」除局部天柱、風池外，常遠配：",
+                options: [
+                    "後溪、崑崙（手足太陽經穴）",
+                    "內關、公孫",
+                    "中脘、足三里",
+                    "神門、三陰交"
+                ],
+                ans: 0,
+                exp: "太陽經循行過後頭項背，故後頭痛遠取手太陽後溪、足太陽崑崙。"
+            },
+            {
+                cat: "辨證配穴",
+                q: "治療胃痛時，若辨證屬「肝氣犯胃（脅脹痛、喜太息、脈弦）」，除主穴中脘、內關、足三里外，宜加配：",
+                options: [
+                    "太衝、期門（疏肝理氣和胃）",
+                    "關元、命門（溫補腎陽）",
+                    "大椎、曲池（清泄陽明實熱）",
+                    "尺澤、列缺（宣肺止咳）"
+                ],
+                ans: 0,
+                exp: "肝氣犯胃需疏肝和胃，加配肝經原穴太衝及肝募穴期門，平抑肝氣橫逆。"
+            },
+            {
+                cat: "辨證配穴",
+                q: "治療胃痛時，若辨證屬「寒邪客胃（胃脘冷痛劇烈、得溫痛減、苔白脈弦緊）」，除主穴外，常加配：",
+                options: [
+                    "神闕（隔鹽灸或溫灸）、梁丘（溫胃散寒止痛）",
+                    "少商、商陽點刺放血",
+                    "曲池、內庭清瀉胃火",
+                    "豐隆、陰陵泉燥濕化痰"
+                ],
+                ans: 0,
+                exp: "寒邪客胃宜溫中散寒止痛，可加灸神闕或胃俞，並配胃經郄穴梁丘緩急止痛。"
+            },
+            {
+                cat: "辨證配穴",
+                q: "治療痛經時，若屬「寒凝血瘀（小腹冷痛拒按、得熱痛減、經血紫暗有塊）」，除主穴三陰交、中極、次髎外，常加配：",
+                options: [
+                    "地機（脾經郄穴止痛）、關元（加灸溫經散寒）",
+                    "大椎、曲池清熱解表",
+                    "尺澤、孔最清肺止血",
+                    "風池、百會平肝熄風"
+                ],
+                ans: 0,
+                exp: "地機為足太陰脾經郄穴，善治血瘀痛經；關元溫補下元、溫通衝任，灸之散寒止痛效果佳。"
+            },
+            {
+                cat: "辨證配穴",
+                q: "治療哮喘（實證・風寒束肺或痰熱壅肺）發作期，常取「定喘、肺俞、膻中、列缺」，其中「定喘」屬於：",
+                options: [
+                    "對症／隨症經驗奇穴（專門平喘止咳）",
+                    "手太陰肺經井穴",
+                    "足陽明胃經下合穴",
+                    "八脈交會穴"
+                ],
+                ans: 0,
+                exp: "定喘為經外奇穴，位於大椎旁開 0.5 寸，是針灸平喘止咳的對症經驗效穴。"
+            },
+            {
+                cat: "辨證配穴",
+                q: "治療眩暈時，若屬「痰濕中阻（頭重如裹、胸悶噁心、苔白膩、脈濡滑）」，除主穴風池、百會外，常加配：",
+                options: [
+                    "豐隆、中脘、陰陵泉（健脾化痰除濕）",
+                    "太谿、照海（滋補腎陰）",
+                    "行間、俠谿（清瀉肝火）",
+                    "關元、氣海（溫補元氣）"
+                ],
+                ans: 0,
+                exp: "「治痰先治脾」，豐隆為化痰要穴，中脘健脾和胃，陰陵泉健脾利濕，共除痰濕濁陰。"
+            },
+            {
+                cat: "辨證配穴",
+                q: "治療中風（閉證・突然昏仆、牙關緊閉、兩手握固、面赤氣粗），首要配穴原則是：",
+                options: [
+                    "醒腦開竅、啟閉固脫（如水溝、十二井穴、太衝、合谷、勞宮），用瀉法",
+                    "大劑溫補腎陽（大炷艾灸關元、神闕）",
+                    "只取足三里、三陰交補法",
+                    "只取背部膀胱經刮痧"
+                ],
+                ans: 0,
+                exp: "中風閉證屬實邪閉阻清竅，治宜醒腦開竅、泄熱熄風；脫證（目合口開、手撒遺尿、汗出肢冷）才用大炷重灸關元、神闕回陽固脫。"
+            }
+        ];
+
+        let activePool = [...comboBank];
+        let currentQ = null;
+        let correctCount = 0;
+        let totalAnswered = 0;
+
+        function setCategory(cat, btn) {
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            activePool = cat === '全部' ? [...comboBank] : comboBank.filter(item => item.cat === cat);
+            loadQuestion();
+        }
+
+        function shuffle(arr) {
+            const copy = [...arr];
+            for (let i = copy.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [copy[i], copy[j]] = [copy[j], copy[i]];
+            }
+            return copy;
+        }
+
+        function loadQuestion() {
+            if (activePool.length === 0) activePool = [...comboBank];
+            const idx = Math.floor(Math.random() * activePool.length);
+            currentQ = activePool[idx];
+
+            document.getElementById('questionText').textContent = `[${currentQ.cat}] ${currentQ.q}`;
+            document.getElementById('explainBox').style.display = 'none';
+            document.getElementById('nextBtn').style.display = 'none';
+
+            const container = document.getElementById('optionsContainer');
+            container.innerHTML = '';
+
+            const indexedOpts = currentQ.options.map((text, i) => ({ text, isCorrect: i === currentQ.ans }));
+            shuffle(indexedOpts).forEach(opt => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.textContent = opt.text;
+                btn.onclick = () => selectOption(btn, opt.isCorrect);
+                container.appendChild(btn);
+            });
+        }
+
+        function selectOption(clickedBtn, isCorrect) {
+            const allBtns = document.querySelectorAll('.option-btn');
+            allBtns.forEach(b => b.disabled = true);
+
+            totalAnswered++;
+            if (isCorrect) {
+                clickedBtn.classList.add('correct');
+                correctCount++;
+            } else {
+                clickedBtn.classList.add('wrong');
+            }
+
+            document.getElementById('scoreText').textContent = `答對：${correctCount} / ${totalAnswered}`;
+            const expBox = document.getElementById('explainBox');
+            expBox.innerHTML = `<strong>💡 配穴解析：</strong>${currentQ.exp}`;
+            expBox.style.display = 'block';
+            document.getElementById('nextBtn').style.display = 'block';
+        }
+
+        window.onload = loadQuestion;
+    </script>
+</body>
+</html>
