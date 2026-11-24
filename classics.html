@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <link rel="manifest" href="manifest.json">
+    <title>經典條文・六經・衛氣營血特訓</title>
+    <style>
+        body {
+            font-family: "Microsoft JhengHei", -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: #f4f7f6;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            margin: 0;
+            padding: 16px 0 32px 0;
+            box-sizing: border-box;
+        }
+        .card {
+            background: white;
+            padding: 20px 18px;
+            border-radius: 16px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            width: 92%;
+            max-width: 520px;
+            box-sizing: border-box;
+        }
+        .header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        .badge {
+            background-color: #fef5e7;
+            color: #b9770e;
+            font-size: 0.85rem;
+            font-weight: bold;
+            padding: 4px 10px;
+            border-radius: 20px;
+        }
+        .filter-bar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-bottom: 16px;
+        }
+        .filter-btn {
+            border: 1px solid #d5dbdb;
+            background: #f8f9f9;
+            color: #555;
+            padding: 6px 10px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            font-family: inherit;
+        }
+        .filter-btn.active {
+            background: #b9770e;
+            color: white;
+            border-color: #b9770e;
+            font-weight: bold;
+        }
+        .question-box {
+            background-color: #fefcf5;
+            border-left: 5px solid #b9770e;
+            padding: 14px;
+            border-radius: 8px;
+            font-size: 1.06rem;
+            font-weight: bold;
+            color: #2c3e50;
+            line-height: 1.55;
+            margin-bottom: 16px;
+        }
+        .options-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+        .option-btn {
+            text-align: left;
+            padding: 12px 14px;
+            border: 2px solid #dce4ec;
+            border-radius: 10px;
+            background: white;
+            color: #2c3e50;
+            font-size: 1rem;
+            cursor: pointer;
+            font-family: inherit;
+            line-height: 1.45;
+            transition: all 0.15s;
+        }
+        .option-btn:hover:not(:disabled) {
+            border-color: #b9770e;
+            background-color: #fef9ee;
+        }
+        .option-btn.correct {
+            border-color: #27ae60;
+            background-color: #eafaf1;
+            color: #1e8449;
+            font-weight: bold;
+        }
+        .option-btn.wrong {
+            border-color: #e74c3c;
+            background-color: #fdedec;
+            color: #c0392b;
+            font-weight: bold;
+        }
+        .explain-box {
+            display: none;
+            background-color: #fef9e7;
+            border-left: 5px solid #f1c40f;
+            padding: 12px 14px;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            color: #2c3e50;
+            line-height: 1.6;
+            margin-bottom: 16px;
+        }
+        .action-btn {
+            background-color: #b9770e;
+            color: white;
+            border: none;
+            padding: 14px 20px;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            width: 100%;
+            font-weight: bold;
+            display: none;
+        }
+        .back-link {
+            display: block;
+            text-align: center;
+            margin-top: 18px;
+            color: #7f8c8d;
+            text-decoration: none;
+            font-size: 0.95rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="header-row">
+            <span class="badge">經典條文・六經・衛氣營血</span>
+            <span id="scoreText" class="badge" style="background:#f0f3f4; color:#555;">答對：0 / 0</span>
+        </div>
+
+        <div class="filter-bar">
+            <button class="filter-btn active" onclick="setCategory('全部', this)">全部</button>
+            <button class="filter-btn" onclick="setCategory('六經辨證', this)">六經辨證</button>
+            <button class="filter-btn" onclick="setCategory('衛氣營血', this)">衛氣營血</button>
+            <button class="filter-btn" onclick="setCategory('經典條文', this)">經典條文</button>
+        </div>
+
+        <div id="questionText" class="question-box">載入中...</div>
+        <div id="optionsContainer" class="options-list"></div>
+        <div id="explainBox" class="explain-box"></div>
+
+        <button id="nextBtn" class="action-btn" onclick="loadQuestion()">下一題 ➔</button>
+        <a href="index.html" class="back-link" onclick="event.preventDefault(); window.location.href='index.html';">← 返回主選單</a>
+    </div>
+
+    <script>
+        const classicsBank = [
+            {
+                cat: "六經辨證",
+                q: "《傷寒論》中，少陽病提綱證的核心表現是：",
+                options: ["口苦、咽乾、目眩", "脈浮，頭項強痛而惡寒", "身熱，汗自出，不惡寒，反惡熱", "但欲寐，脈微細"],
+                ans: 0,
+                exp: "少陽病提綱為「少陽之為病，口苦、咽乾、目眩也」；太陽病提綱為「脈浮，頭項強痛而惡寒」；陽明病提綱為「胃家實是也」；少陰病提綱為「脈微細，但欲寐也」。"
+            },
+            {
+                cat: "六經辨證",
+                q: "「傷寒五六日，中風，往來寒熱，胸脅苦滿，默默不欲飲食，心煩喜嘔…」，此條文對應的主方是：",
+                options: ["小柴胡湯", "大柴胡湯", "柴胡桂枝湯", "麻黃湯"],
+                ans: 0,
+                exp: "此為少陽半表半裏證之典型條文，治以和解少陽，主方為小柴胡湯。"
+            },
+            {
+                cat: "衛氣營血",
+                q: "溫病衛氣營血辨證中，「斑疹隱隱、時隱時現、夜熱早涼、舌絳、脈細數」多屬：",
+                options: ["營分證", "衛分證", "氣分證", "血分證"],
+                ans: 0,
+                exp: "營分證特點為「熱入營陰，營陰受灼」，見身熱夜甚、口乾反不甚渴、心煩不眠、斑疹隱隱、舌質紅絳；若斑疹顯露紫黑、動血（吐衄便血尿血）、動風抽搐，則進一步入「血分證」。"
+            },
+            {
+                cat: "衛氣營血",
+                q: "溫病初起見「發熱、微惡風寒、咳嗽、口渴、舌邊尖紅、苔薄白或薄黃、脈浮數」，辨證所屬階段為：",
+                options: ["衛分證", "氣分證", "營分證", "血分證"],
+                ans: 0,
+                exp: "外感溫熱病邪初犯肺衛，見發熱微惡風寒、口渴、脈浮數，屬「衛分證」，治宜辛涼解表（如銀翹散）。"
+            },
+            {
+                cat: "經典條文",
+                q: "《金匱要略》提出「病痰飲者，當以溫藥和之」，下列哪首方劑最體現此治則？",
+                options: ["苓桂朮甘湯", "白虎湯", "龍膽瀉肝湯", "黃連解毒湯"],
+                ans: 0,
+                exp: "痰飲多因陽虛不化、水濕停聚而成，故治以溫陽化飲、健脾利濕，苓桂朮甘湯正為代表方劑。"
+            },
+            {
+                cat: "經典條文",
+                q: "《溫病條辨》中，「太陰溫病，脈浮洪，舌黃，渴甚，大汗，面赤，惡寒者」，宜用：",
+                options: ["白虎湯", "麻黃湯", "四逆湯", "理中湯"],
+                ans: 0,
+                exp: "「脈浮洪、舌黃、渴甚、大汗、面赤」為氣分大熱之象，白虎湯辛寒清氣分熱，為治氣分熱盛主方。"
+            }
+        ];
+
+        let activePool = [...classicsBank];
+        let currentQ = null;
+        let correctCount = 0;
+        let totalAnswered = 0;
+
+        function setCategory(cat, btn) {
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            activePool = cat === '全部' ? [...classicsBank] : classicsBank.filter(item => item.cat === cat);
+            loadQuestion();
+        }
+
+        function shuffle(arr) {
+            const copy = [...arr];
+            for (let i = copy.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [copy[i], copy[j]] = [copy[j], copy[i]];
+            }
+            return copy;
+        }
+
+        function loadQuestion() {
+            if (activePool.length === 0) activePool = [...classicsBank];
+            const idx = Math.floor(Math.random() * activePool.length);
+            currentQ = activePool[idx];
+
+            document.getElementById('questionText').textContent = `[${currentQ.cat}] ${currentQ.q}`;
+            document.getElementById('explainBox').style.display = 'none';
+            document.getElementById('nextBtn').style.display = 'none';
+
+            const container = document.getElementById('optionsContainer');
+            container.innerHTML = '';
+
+            const indexedOpts = currentQ.options.map((text, i) => ({ text, isCorrect: i === currentQ.ans }));
+            shuffle(indexedOpts).forEach(opt => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.textContent = opt.text;
+                btn.onclick = () => selectOption(btn, opt.isCorrect);
+                container.appendChild(btn);
+            });
+        }
+
+        function selectOption(clickedBtn, isCorrect) {
+            const allBtns = document.querySelectorAll('.option-btn');
+            allBtns.forEach(b => b.disabled = true);
+
+            totalAnswered++;
+            if (isCorrect) {
+                clickedBtn.classList.add('correct');
+                correctCount++;
+            } else {
+                clickedBtn.classList.add('wrong');
+            }
+
+            document.getElementById('scoreText').textContent = `答對：${correctCount} / ${totalAnswered}`;
+            const expBox = document.getElementById('explainBox');
+            expBox.innerHTML = `<strong>💡 條文解析：</strong>${currentQ.exp}`;
+            expBox.style.display = 'block';
+            document.getElementById('nextBtn').style.display = 'block';
+        }
+
+        window.onload = loadQuestion;
+    </script>
+</body>
+</html>

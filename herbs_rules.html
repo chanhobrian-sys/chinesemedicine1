@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <link rel="manifest" href="manifest.json">
+    <title>中藥禁忌・煎法・藥對特訓</title>
+    <style>
+        body {
+            font-family: "Microsoft JhengHei", -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: #f4f7f6;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            margin: 0;
+            padding: 16px 0 32px 0;
+            box-sizing: border-box;
+        }
+        .card {
+            background: white;
+            padding: 20px 18px;
+            border-radius: 16px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            width: 92%;
+            max-width: 520px;
+            box-sizing: border-box;
+        }
+        .header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        .badge {
+            background-color: #e8f8f5;
+            color: #16a085;
+            font-size: 0.85rem;
+            font-weight: bold;
+            padding: 4px 10px;
+            border-radius: 20px;
+        }
+        .filter-bar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-bottom: 16px;
+        }
+        .filter-btn {
+            border: 1px solid #d5dbdb;
+            background: #f8f9f9;
+            color: #555;
+            padding: 6px 10px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            font-family: inherit;
+        }
+        .filter-btn.active {
+            background: #16a085;
+            color: white;
+            border-color: #16a085;
+            font-weight: bold;
+        }
+        .question-box {
+            background-color: #f9fbfc;
+            border-left: 5px solid #16a085;
+            padding: 14px;
+            border-radius: 8px;
+            font-size: 1.08rem;
+            font-weight: bold;
+            color: #2c3e50;
+            line-height: 1.55;
+            margin-bottom: 16px;
+        }
+        .options-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+        .option-btn {
+            text-align: left;
+            padding: 12px 14px;
+            border: 2px solid #dce4ec;
+            border-radius: 10px;
+            background: white;
+            color: #2c3e50;
+            font-size: 1rem;
+            cursor: pointer;
+            font-family: inherit;
+            line-height: 1.45;
+            transition: all 0.15s;
+        }
+        .option-btn:hover:not(:disabled) {
+            border-color: #16a085;
+            background-color: #f0faf7;
+        }
+        .option-btn.correct {
+            border-color: #27ae60;
+            background-color: #eafaf1;
+            color: #1e8449;
+            font-weight: bold;
+        }
+        .option-btn.wrong {
+            border-color: #e74c3c;
+            background-color: #fdedec;
+            color: #c0392b;
+            font-weight: bold;
+        }
+        .explain-box {
+            display: none;
+            background-color: #fef9e7;
+            border-left: 5px solid #f1c40f;
+            padding: 12px 14px;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            color: #2c3e50;
+            line-height: 1.6;
+            margin-bottom: 16px;
+        }
+        .action-btn {
+            background-color: #16a085;
+            color: white;
+            border: none;
+            padding: 14px 20px;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            width: 100%;
+            font-weight: bold;
+            display: none;
+        }
+        .back-link {
+            display: block;
+            text-align: center;
+            margin-top: 18px;
+            color: #7f8c8d;
+            text-decoration: none;
+            font-size: 0.95rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="header-row">
+            <span class="badge">中藥必考送分題</span>
+            <span id="scoreText" class="badge" style="background:#f0f3f4; color:#555;">答對：0 / 0</span>
+        </div>
+
+        <div class="filter-bar">
+            <button class="filter-btn active" onclick="setCategory('全部', this)">全部</button>
+            <button class="filter-btn" onclick="setCategory('配伍禁忌', this)">十八反・十九畏</button>
+            <button class="filter-btn" onclick="setCategory('妊娠禁忌', this)">妊娠禁忌</button>
+            <button class="filter-btn" onclick="setCategory('特殊煎法', this)">特殊煎法</button>
+            <button class="filter-btn" onclick="setCategory('藥對辨析', this)">藥對辨析</button>
+        </div>
+
+        <div id="questionText" class="question-box">載入中...</div>
+        <div id="optionsContainer" class="options-list"></div>
+        <div id="explainBox" class="explain-box"></div>
+
+        <button id="nextBtn" class="action-btn" onclick="loadQuestion()">下一題 ➔</button>
+        <a href="index.html" class="back-link" onclick="event.preventDefault(); window.location.href='index.html';">← 返回主選單</a>
+    </div>
+
+    <script>
+        const questionBank = [
+            {
+                cat: "配伍禁忌",
+                q: "根據「十八反」，下列哪組藥物屬於配伍禁忌？",
+                options: ["甘草 反 甘遂、大戟、海藻、芫花", "甘草 反 烏頭、附子", "人參 反 五靈脂", "官桂 反 赤石脂"],
+                ans: 0,
+                exp: "「藻戟遂芫俱戰草」：甘草反海藻、大戟、甘遂、芫花；烏頭反貝母、瓜蔞、半夏、白蘞、白及；藜蘆反人參、沙參、丹參、玄參、細辛、芍藥。"
+            },
+            {
+                cat: "配伍禁忌",
+                q: "根據「十九畏」，下列哪項配伍屬於「相畏」禁忌？",
+                options: ["硫黃 畏 朴硝", "半夏 畏 生薑", "附子 畏 甘草", "黃連 畏 吳茱萸"],
+                ans: 0,
+                exp: "十九畏口訣：硫黃原是火中精，朴硝一見便相爭；水銀莫與砒霜見，狼毒最怕密陀僧；巴豆性烈最為上，偏與牽牛不順情；丁香莫與鬱金見，牙硝難合荊三稜；川烏草烏不順犀，人參最怕五靈脂；官桂善能調冷氣，若逢石脂便相欺。"
+            },
+            {
+                cat: "妊娠禁忌",
+                q: "下列哪組中藥均屬於「妊娠禁用藥」？",
+                options: ["巴豆、牽牛子、斑蝥、麝香、水蛭、虻蟲", "附子、乾薑、大黃、芒硝、桃仁、紅花", "枳實、厚朴、柴胡、黃芩、半夏、陳皮", "白朮、黃耆、當歸、熟地、川芎、白芍"],
+                ans: 0,
+                exp: "妊娠禁用藥多為峻下逐水、破血逐瘀、通經竄下、大毒之品（如巴豆、牽牛子、大戟、芫花、甘遂、商陸、麝香、斑蝥、水蛭、虻蟲、三稜、莪朮等）。"
+            },
+            {
+                cat: "特殊煎法",
+                q: "薄荷、砂仁、沉香、白豆蔻、大黃（瀉下時）在煎煮時一般應採用哪種特殊煎法？",
+                options: ["後下", "先煎", "包煎", "烊化"],
+                ans: 0,
+                exp: "含揮發油、芳香走竄、不宜久煎之藥（如薄荷、青蒿、砂仁、豆蔻、沉香、木香）及瀉下通便之大黃，多於煎煮末段 5～10 分鐘後下。"
+            },
+            {
+                cat: "特殊煎法",
+                q: "附子、川烏、草烏、生石膏、龍骨、牡蠣煎煮時通常需要：",
+                options: ["先煎", "後下", "另煎", "沖服"],
+                ans: 0,
+                exp: "烏頭類、附子先煎久煎可降低毒性；礦物類、介殼類（如生石膏、龍骨、牡蠣、代赭石）質地堅硬，先煎有助有效成分溶出。"
+            },
+            {
+                cat: "特殊煎法",
+                q: "車前子、旋覆花、蒲黃、海金沙、青黛入湯劑時，一般建議：",
+                options: ["包煎", "烊化", "另煎", "煎湯代水"],
+                ans: 0,
+                exp: "含黏液質多（易黏鍋焦糊，如車前子）、絨毛多（易刺激咽喉引起咳嗽，如旋覆花）、花粉／細末類（如蒲黃、海金沙）宜用布包煎。"
+            },
+            {
+                cat: "藥對辨析",
+                q: "同屬清熱燥濕藥，黃芩、黃連、黃柏的分工特點分別是：",
+                options: ["黃芩偏清上焦熱，黃連偏清中焦火，黃柏偏清下焦熱", "黃芩偏清下焦熱，黃連偏清上焦熱，黃柏偏清中焦火", "黃芩偏清心火，黃連偏清肺火，黃柏偏清胃火", "三者功效完全相同，無焦位側重"],
+                ans: 0,
+                exp: "執業試高頻考點：黃芩清上焦肺熱／胎熱；黃連善清心胃火及胃腸濕熱；黃柏善清下焦腎膀胱濕熱及退虛熱。"
+            },
+            {
+                cat: "藥對辨析",
+                q: "麻黃與桂枝配伍（如麻黃湯），其協同作用核心是：",
+                options: ["一宣一散，增強發汗解表之力", "一溫一清，寒熱並用", "一補一瀉，補中有瀉", "一升一降，調和氣機"],
+                ans: 0,
+                exp: "麻黃辛溫發汗、宣肺平喘；桂枝辛甘溫，解肌發表、溫通經脈，助麻黃發汗之力，一宣一散共奏發汗解表之效。"
+            }
+        ];
+
+        let currentCat = '全部';
+        let activePool = [...questionBank];
+        let currentQ = null;
+        let correctCount = 0;
+        let totalAnswered = 0;
+
+        function setCategory(cat, btn) {
+            currentCat = cat;
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            activePool = cat === '全部' ? [...questionBank] : questionBank.filter(item => item.cat === cat);
+            loadQuestion();
+        }
+
+        function shuffle(arr) {
+            const copy = [...arr];
+            for (let i = copy.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [copy[i], copy[j]] = [copy[j], copy[i]];
+            }
+            return copy;
+        }
+
+        function loadQuestion() {
+            if (activePool.length === 0) activePool = [...questionBank];
+            const idx = Math.floor(Math.random() * activePool.length);
+            currentQ = activePool[idx];
+
+            document.getElementById('questionText').textContent = `[${currentQ.cat}] ${currentQ.q}`;
+            document.getElementById('explainBox').style.display = 'none';
+            document.getElementById('nextBtn').style.display = 'none';
+
+            const container = document.getElementById('optionsContainer');
+            container.innerHTML = '';
+
+            const indexedOpts = currentQ.options.map((text, i) => ({ text, isCorrect: i === currentQ.ans }));
+            shuffle(indexedOpts).forEach(opt => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.textContent = opt.text;
+                btn.onclick = () => selectOption(btn, opt.isCorrect);
+                container.appendChild(btn);
+            });
+        }
+
+        function selectOption(clickedBtn, isCorrect) {
+            const allBtns = document.querySelectorAll('.option-btn');
+            allBtns.forEach(b => b.disabled = true);
+
+            totalAnswered++;
+            if (isCorrect) {
+                clickedBtn.classList.add('correct');
+                correctCount++;
+            } else {
+                clickedBtn.classList.add('wrong');
+            }
+
+            document.getElementById('scoreText').textContent = `答對：${correctCount} / ${totalAnswered}`;
+            const expBox = document.getElementById('explainBox');
+            expBox.innerHTML = `<strong>💡 解析：</strong>${currentQ.exp}`;
+            expBox.style.display = 'block';
+            document.getElementById('nextBtn').style.display = 'block';
+        }
+
+        window.onload = loadQuestion;
+    </script>
+</body>
+</html>

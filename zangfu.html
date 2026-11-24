@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <link rel="manifest" href="manifest.json">
+    <title>臟腑辨證精準特訓</title>
+    <style>
+        body {
+            font-family: "Microsoft JhengHei", -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: #f4f7f6;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            margin: 0;
+            padding: 16px 0 32px 0;
+            box-sizing: border-box;
+        }
+        .card {
+            background: white;
+            padding: 20px 18px;
+            border-radius: 16px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            width: 92%;
+            max-width: 520px;
+            box-sizing: border-box;
+        }
+        .header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        .badge {
+            background-color: #f5eef8;
+            color: #7d3c98;
+            font-size: 0.85rem;
+            font-weight: bold;
+            padding: 4px 10px;
+            border-radius: 20px;
+        }
+        .filter-bar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-bottom: 16px;
+        }
+        .filter-btn {
+            border: 1px solid #d5dbdb;
+            background: #f8f9f9;
+            color: #555;
+            padding: 6px 10px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            font-family: inherit;
+        }
+        .filter-btn.active {
+            background: #7d3c98;
+            color: white;
+            border-color: #7d3c98;
+            font-weight: bold;
+        }
+        .question-box {
+            background-color: #fbf8fd;
+            border-left: 5px solid #7d3c98;
+            padding: 14px;
+            border-radius: 8px;
+            font-size: 1.06rem;
+            font-weight: bold;
+            color: #2c3e50;
+            line-height: 1.55;
+            margin-bottom: 16px;
+        }
+        .options-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+        .option-btn {
+            text-align: left;
+            padding: 12px 14px;
+            border: 2px solid #dce4ec;
+            border-radius: 10px;
+            background: white;
+            color: #2c3e50;
+            font-size: 1rem;
+            cursor: pointer;
+            font-family: inherit;
+            line-height: 1.45;
+            transition: all 0.15s;
+        }
+        .option-btn:hover:not(:disabled) {
+            border-color: #7d3c98;
+            background-color: #f8f3fa;
+        }
+        .option-btn.correct {
+            border-color: #27ae60;
+            background-color: #eafaf1;
+            color: #1e8449;
+            font-weight: bold;
+        }
+        .option-btn.wrong {
+            border-color: #e74c3c;
+            background-color: #fdedec;
+            color: #c0392b;
+            font-weight: bold;
+        }
+        .explain-box {
+            display: none;
+            background-color: #fef9e7;
+            border-left: 5px solid #f1c40f;
+            padding: 12px 14px;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            color: #2c3e50;
+            line-height: 1.6;
+            margin-bottom: 16px;
+        }
+        .action-btn {
+            background-color: #7d3c98;
+            color: white;
+            border: none;
+            padding: 14px 20px;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            width: 100%;
+            font-weight: bold;
+            display: none;
+        }
+        .back-link {
+            display: block;
+            text-align: center;
+            margin-top: 18px;
+            color: #7f8c8d;
+            text-decoration: none;
+            font-size: 0.95rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="header-row">
+            <span class="badge">臟腑辨證・防混淆特訓</span>
+            <span id="scoreText" class="badge" style="background:#f0f3f4; color:#555;">答對：0 / 0</span>
+        </div>
+
+        <div class="filter-bar">
+            <button class="filter-btn active" onclick="setCategory('全部', this)">全部</button>
+            <button class="filter-btn" onclick="setCategory('肝膽系', this)">肝膽系</button>
+            <button class="filter-btn" onclick="setCategory('心系', this)">心系</button>
+            <button class="filter-btn" onclick="setCategory('脾胃系', this)">脾胃系</button>
+            <button class="filter-btn" onclick="setCategory('肺腎系', this)">肺腎系</button>
+        </div>
+
+        <div id="questionText" class="question-box">載入中...</div>
+        <div id="optionsContainer" class="options-list"></div>
+        <div id="explainBox" class="explain-box"></div>
+
+        <button id="nextBtn" class="action-btn" onclick="loadQuestion()">下一題 ➔</button>
+        <a href="index.html" class="back-link" onclick="event.preventDefault(); window.location.href='index.html';">← 返回主選單</a>
+    </div>
+
+    <script>
+        const zangfuBank = [
+            {
+                cat: "肝膽系",
+                q: "脅肋灼痛、急躁易怒、面紅目赤、口苦咽乾、便秘尿黃、脈弦數，最準確辨證為：",
+                options: ["肝火上炎證", "肝鬱氣滯證", "肝陽上亢證", "肝陰虛證"],
+                ans: 0,
+                exp: "關鍵分辨點：肝鬱氣滯以「脹痛、善太息」為主；肝火上炎見「實火熱象」（面紅目赤、口苦、便乾尿黃、脈弦數）；肝陽上亢則見「上盛下虛」（頭暈脹痛、腰膝痠軟、頭重腳輕）。"
+            },
+            {
+                cat: "肝膽系",
+                q: "眩暈耳鳴、頭目脹痛、面紅升火、腰膝痠軟、頭重腳輕、舌紅少津、脈弦細數，屬於：",
+                options: ["肝陽上亢證", "肝火上炎證", "肝風內動證", "肝氣鬱結證"],
+                ans: 0,
+                exp: "「上實下虛」係肝陽上亢核心特徵：上部陽亢見頭暈脹痛、面紅；下部陰虛見腰膝痠軟、足膝無力。"
+            },
+            {
+                cat: "心系",
+                q: "心悸氣短、勞則尤甚、自汗、神疲體倦、面色淡白、舌淡苔白、脈虛，最準確辨證為：",
+                options: ["心氣虛證", "心陽虛證", "心血虛證", "心陰虛證"],
+                ans: 0,
+                exp: "心氣虛具備「心悸＋氣虛」徵象；若在心氣虛基礎上加上「畏寒肢冷、心痛、舌淡胖或紫暗、脈微細」，才進一步辨為「心陽虛證」。"
+            },
+            {
+                cat: "心系",
+                q: "心悸怔忡、失眠多夢、健忘、面色淡白或萎黃、唇舌色淡、脈細弱，屬於：",
+                options: ["心血虛證", "心陰虛證", "心氣虛證", "心火亢盛證"],
+                ans: 0,
+                exp: "心血虛重點在於「血不養心」兼「血虛色淡」；若見五心煩熱、潮熱盜汗、舌紅少苔、脈細數，則屬「心陰虛證」。"
+            },
+            {
+                cat: "脾胃系",
+                q: "脘腹冷痛、喜溫喜按、畏寒肢冷、泛吐清水、大便溏薄、舌淡苔白滑、脈沉遲無力，屬於：",
+                options: ["脾陽虛證", "寒濕困脾證", "胃寒證", "脾氣虛證"],
+                ans: 0,
+                exp: "關鍵分辨點：脾陽虛以「虛寒＋陽虛」為主（喜溫喜按、畏寒肢冷、脈沉遲無力）；寒濕困脾則以「濕濁困阻」為主（頭身困重、脘痞納呆、泛惡欲嘔、苔白膩厚、脈濡緩）。"
+            },
+            {
+                cat: "脾胃系",
+                q: "脘腹痞悶、納呆嘔惡、口黏不渴、頭身困重、大便溏泄、舌苔白膩、脈濡緩，屬於：",
+                options: ["寒濕困脾證", "脾胃氣虛證", "食滯胃脘證", "脾陰虛證"],
+                ans: 0,
+                exp: "「困重、痞悶、白膩、濡緩」係寒濕困脾典型題眼，濕邪重濁黏膩，阻遏氣機。"
+            },
+            {
+                cat: "肺腎系",
+                q: "咳嗽痰少、痰黏難咯、或痰中帶血、口燥咽乾、形體消瘦、潮熱盜汗、五心煩熱、舌紅少苔、脈細數，屬於：",
+                options: ["肺陰虛證", "燥邪犯肺證", "肺熱熾盛證", "風熱犯肺證"],
+                ans: 0,
+                exp: "「乾咳少痰＋陰虛內熱（潮熱盜汗、五心煩熱、舌紅少苔、脈細數）」係肺陰虛特徵；燥邪犯肺起病急、多兼表證，無明顯陰虛內熱。"
+            },
+            {
+                cat: "肺腎系",
+                q: "腰膝痠軟、眩暈耳鳴、五更泄瀉、畏寒肢冷、小便清長或夜尿多、男子陽痿、舌淡胖苔白、脈沉遲無力，屬於：",
+                options: ["腎陽虛證", "腎陰虛證", "腎氣不固證", "脾腎陽虛證"],
+                ans: 0,
+                exp: "腎陽虛見「腰膝痠軟＋全身寒象（畏寒肢冷、小便清長、五更泄瀉、脈沉遲無力）」；若偏見小便失禁、滑精早泄、帶下清稀而無明顯全身寒象，則多辨為「腎氣不固證」。"
+            }
+        ];
+
+        let activePool = [...zangfuBank];
+        let currentQ = null;
+        let correctCount = 0;
+        let totalAnswered = 0;
+
+        function setCategory(cat, btn) {
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            activePool = cat === '全部' ? [...zangfuBank] : zangfuBank.filter(item => item.cat === cat);
+            loadQuestion();
+        }
+
+        function shuffle(arr) {
+            const copy = [...arr];
+            for (let i = copy.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [copy[i], copy[j]] = [copy[j], copy[i]];
+            }
+            return copy;
+        }
+
+        function loadQuestion() {
+            if (activePool.length === 0) activePool = [...zangfuBank];
+            const idx = Math.floor(Math.random() * activePool.length);
+            currentQ = activePool[idx];
+
+            document.getElementById('questionText').textContent = `[${currentQ.cat}] ${currentQ.q}`;
+            document.getElementById('explainBox').style.display = 'none';
+            document.getElementById('nextBtn').style.display = 'none';
+
+            const container = document.getElementById('optionsContainer');
+            container.innerHTML = '';
+
+            const indexedOpts = currentQ.options.map((text, i) => ({ text, isCorrect: i === currentQ.ans }));
+            shuffle(indexedOpts).forEach(opt => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.textContent = opt.text;
+                btn.onclick = () => selectOption(btn, opt.isCorrect);
+                container.appendChild(btn);
+            });
+        }
+
+        function selectOption(clickedBtn, isCorrect) {
+            const allBtns = document.querySelectorAll('.option-btn');
+            allBtns.forEach(b => b.disabled = true);
+
+            totalAnswered++;
+            if (isCorrect) {
+                clickedBtn.classList.add('correct');
+                correctCount++;
+            } else {
+                clickedBtn.classList.add('wrong');
+            }
+
+            document.getElementById('scoreText').textContent = `答對：${correctCount} / ${totalAnswered}`;
+            const expBox = document.getElementById('explainBox');
+            expBox.innerHTML = `<strong>💡 辨析重點：</strong>${currentQ.exp}`;
+            expBox.style.display = 'block';
+            document.getElementById('nextBtn').style.display = 'block';
+        }
+
+        window.onload = loadQuestion;
+    </script>
+</body>
+</html>

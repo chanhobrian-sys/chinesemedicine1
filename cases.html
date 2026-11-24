@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <link rel="manifest" href="manifest.json">
+    <title>臨床病例連環 MC 特訓</title>
+    <style>
+        body {
+            font-family: "Microsoft JhengHei", -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: #f4f7f6;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            margin: 0;
+            padding: 16px 0 32px 0;
+            box-sizing: border-box;
+        }
+        .card {
+            background: white;
+            padding: 20px 18px;
+            border-radius: 16px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            width: 92%;
+            max-width: 520px;
+            box-sizing: border-box;
+        }
+        .header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        .badge {
+            background-color: #ebf5fb;
+            color: #2874a6;
+            font-size: 0.85rem;
+            font-weight: bold;
+            padding: 4px 10px;
+            border-radius: 20px;
+        }
+        .case-box {
+            background-color: #f8f9fa;
+            border-left: 5px solid #2874a6;
+            padding: 14px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            line-height: 1.6;
+            color: #2c3e50;
+        }
+        .case-title {
+            font-weight: bold;
+            color: #2874a6;
+            margin-bottom: 6px;
+        }
+        .step-box {
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 1px dashed #e0e6ed;
+        }
+        .step-label {
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 8px;
+            font-size: 0.98rem;
+        }
+        .opt-btn {
+            display: block;
+            width: 100%;
+            text-align: left;
+            padding: 10px 12px;
+            margin-bottom: 7px;
+            border: 1.5px solid #dce4ec;
+            border-radius: 8px;
+            background: white;
+            font-size: 0.95rem;
+            color: #2c3e50;
+            cursor: pointer;
+            font-family: inherit;
+        }
+        .opt-btn.selected {
+            border-color: #2874a6;
+            background-color: #ebf5fb;
+            font-weight: bold;
+        }
+        .opt-btn.correct {
+            border-color: #27ae60;
+            background-color: #eafaf1;
+            color: #1e8449;
+            font-weight: bold;
+        }
+        .opt-btn.wrong {
+            border-color: #e74c3c;
+            background-color: #fdedec;
+            color: #c0392b;
+        }
+        .summary-box {
+            display: none;
+            background-color: #fdfefe;
+            border: 1px solid #d6eaf8;
+            border-left: 5px solid #27ae60;
+            padding: 12px 14px;
+            border-radius: 8px;
+            font-size: 0.94rem;
+            line-height: 1.6;
+            margin-bottom: 14px;
+        }
+        .action-btn {
+            background-color: #2874a6;
+            color: white;
+            border: none;
+            padding: 14px 20px;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            width: 100%;
+            font-weight: bold;
+        }
+        #nextCaseBtn {
+            background-color: #27ae60;
+            display: none;
+        }
+        .back-link {
+            display: block;
+            text-align: center;
+            margin-top: 18px;
+            color: #7f8c8d;
+            text-decoration: none;
+            font-size: 0.95rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="header-row">
+            <span class="badge">臨床病例連環 MC</span>
+            <span id="caseProgress" class="badge" style="background:#f0f3f4; color:#555;">病例 1 / 4</span>
+        </div>
+
+        <div class="case-box">
+            <div id="caseHeader" class="case-title">病案摘要</div>
+            <div id="caseDesc">載入中...</div>
+        </div>
+
+        <div id="stepsContainer"></div>
+
+        <div id="summaryBox" class="summary-box"></div>
+
+        <button id="submitBtn" class="action-btn" onclick="gradeCase()">提交三連題核對 ✅</button>
+        <button id="nextCaseBtn" class="action-btn" onclick="loadNextCase()">下一個病例 ➔</button>
+
+        <a href="index.html" class="back-link" onclick="event.preventDefault(); window.location.href='index.html';">← 返回主選單</a>
+    </div>
+
+    <script>
+        const casesData = [
+            {
+                title: "病例 1：外感發熱伴惡寒無汗",
+                desc: "男患，32歲。昨日淋雨後出現惡寒發熱，頭痛身痛，無汗而喘，鼻塞流清涕，舌苔薄白，脈浮緊。",
+                steps: [
+                    { q: "① 辨證為：", opts: ["風寒束表證", "風熱犯表證", "暑濕襲表證", "氣虛外感證"], ans: 0 },
+                    { q: "② 首選治法為：", opts: ["辛溫發汗，宣肺平喘", "辛涼解表，清熱解毒", "解肌發表，調和營衛", "益氣解表"], ans: 0 },
+                    { q: "③ 最對應代表方劑為：", opts: ["麻黃湯", "桂枝湯", "銀翹散", "補中益氣湯"], ans: 0 }
+                ],
+                note: "惡寒重、發熱輕、無汗而喘、脈浮緊，屬典型外感風寒表實證，治以辛溫發汗、宣肺平喘，首選麻黃湯。"
+            },
+            {
+                title: "病例 2：情志抑鬱伴脅肋脹痛",
+                desc: "女患，29歲。近半年工作壓力大，常覺兩脅脹痛，情緒低落，喜嘆氣，月經量少色暗，胸悶食少，舌淡紅，脈弦。",
+                steps: [
+                    { q: "① 辨證為：", opts: ["肝鬱血虛脾弱證", "肝膽實火上炎證", "脾胃氣虛證", "肝陽上亢證"], ans: 0 },
+                    { q: "② 首選治法為：", opts: ["疏肝解鬱，養血健脾", "清肝瀉火，利濕通淋", "益氣健脾", "平肝潛陽"], ans: 0 },
+                    { q: "③ 最對應代表方劑為：", opts: ["逍遙散", "龍膽瀉肝湯", "四君子湯", "白虎湯"], ans: 0 }
+                ],
+                note: "脅痛、善太息、月經不調兼見神疲食少（脾弱）及血虛徵象，屬肝鬱血虛脾弱，方用逍遙散疏肝養血健脾。"
+            },
+            {
+                title: "病例 3：咽喉異物感伴胸悶",
+                desc: "女患，41歲。平素多慮，近兩月自覺咽中如有梅核梗阻，咯之不出，吞之不下，心情舒暢或忙碌時減輕，胸脅滿悶，舌苔白膩，脈弦滑。",
+                steps: [
+                    { q: "① 辨證為：", opts: ["痰氣互結（梅核氣）", "肺陰虛燥咳", "胃熱上逆", "心脾兩虛"], ans: 0 },
+                    { q: "② 首選治法為：", opts: ["行氣散結，降逆化痰", "滋陰潤肺，清熱止咳", "清胃瀉火，降逆止嘔", "補益心脾"], ans: 0 },
+                    { q: "③ 最對應代表方劑為：", opts: ["半夏厚朴湯", "二陳湯", "小柴胡湯", "四物湯"], ans: 0 }
+                ],
+                note: "咽中如有物阻、吞吐不得、隨情志起伏，屬痰氣互結之「梅核氣」，治以行氣散結、降逆化痰，首選半夏厚朴湯。"
+            },
+            {
+                title: "病例 4：久病體虛伴下陷徵象",
+                desc: "男患，56歲。久瀉多年，近見神疲乏力，少氣懶言，食少便溏，伴有脫肛，舌淡苔白，脈虛弱。",
+                steps: [
+                    { q: "① 辨證為：", opts: ["脾虛氣陷證", "腎陰虛證", "陽明腑實證", "痰飲停聚證"], ans: 0 },
+                    { q: "② 首選治法為：", opts: ["補中益氣，升陽舉陷", "滋補肝腎", "峻下熱結", "溫陽化飲"], ans: 0 },
+                    { q: "③ 最對應代表方劑為：", opts: ["補中益氣湯", "六味地黃丸", "大承氣湯", "苓桂朮甘湯"], ans: 0 }
+                ],
+                note: "脾氣虛衰且清陽下陷致久瀉、脫肛，治以補中益氣、升陽舉陷，代表方為補中益氣湯。"
+            }
+        ];
+
+        let caseIndex = 0;
+        let userAnswers = [null, null, null];
+
+        function loadNextCase() {
+            const c = casesData[caseIndex % casesData.length];
+            caseIndex++;
+            userAnswers = [null, null, null];
+
+            document.getElementById('caseProgress').textContent = `病例 ${((caseIndex - 1) % casesData.length) + 1} / ${casesData.length}`;
+            document.getElementById('caseHeader').textContent = c.title;
+            document.getElementById('caseDesc').textContent = c.desc;
+
+            const container = document.getElementById('stepsContainer');
+            container.innerHTML = '';
+
+            c.steps.forEach((st, sIdx) => {
+                const div = document.createElement('div');
+                div.className = 'step-box';
+                div.innerHTML = `<div class="step-label">${st.q}</div>`;
+
+                st.opts.forEach((opText, oIdx) => {
+                    const btn = document.createElement('button');
+                    btn.className = 'opt-btn';
+                    btn.textContent = opText;
+                    btn.dataset.step = sIdx;
+                    btn.dataset.opt = oIdx;
+                    btn.onclick = () => {
+                        userAnswers[sIdx] = oIdx;
+                        div.querySelectorAll('.opt-btn').forEach(b => b.classList.remove('selected'));
+                        btn.classList.add('selected');
+                    };
+                    div.appendChild(btn);
+                });
+                container.appendChild(div);
+            });
+
+            document.getElementById('summaryBox').style.display = 'none';
+            document.getElementById('submitBtn').style.display = 'block';
+            document.getElementById('nextCaseBtn').style.display = 'none';
+        }
+
+        function gradeCase() {
+            const c = casesData[(caseIndex - 1) % casesData.length];
+            let score = 0;
+
+            c.steps.forEach((st, sIdx) => {
+                const btns = document.querySelectorAll(`.opt-btn[data-step="${sIdx}"]`);
+                btns.forEach(b => {
+                    b.disabled = true;
+                    const idx = Number(b.dataset.opt);
+                    if (idx === st.ans) {
+                        b.classList.add('correct');
+                    } else if (idx === userAnswers[sIdx]) {
+                        b.classList.add('wrong');
+                    }
+                });
+                if (userAnswers[sIdx] === st.ans) score++;
+            });
+
+            const sumBox = document.getElementById('summaryBox');
+            sumBox.innerHTML = `<strong>臨床小結（${score} / 3）：</strong>${c.note}`;
+            sumBox.style.display = 'block';
+
+            document.getElementById('submitBtn').style.display = 'none';
+            document.getElementById('nextCaseBtn').style.display = 'block';
+        }
+
+        window.onload = loadNextCase;
+    </script>
+</body>
+</html>

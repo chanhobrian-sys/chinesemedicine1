@@ -2,42 +2,54 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-<meta name="apple-mobile-web-app-capable" content="yes">
-	<meta name="mobile-web-app-capable" content="yes">    
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>方劑圖像記憶特訓</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <link rel="manifest" href="manifest.json">
+    <title>方劑圖像與君臣特訓 (20核心方)</title>
     <style>
         body {
-            font-family: "Microsoft JhengHei", sans-serif;
+            font-family: "Microsoft JhengHei", -apple-system, BlinkMacSystemFont, sans-serif;
             background-color: #f4f7f6;
             display: flex;
             justify-content: center;
-            align-items: center;
+            align-items: flex-start;
             min-height: 100vh;
             margin: 0;
-            padding: 20px 0;
+            padding: 16px 0 32px 0;
             box-sizing: border-box;
         }
         .card {
             background: white;
-            padding: 25px;
-            border-radius: 14px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            padding: 20px 18px;
+            border-radius: 16px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
             width: 92%;
-            max-width: 500px;
+            max-width: 520px;
             text-align: center;
+            box-sizing: border-box;
         }
-        h1 {
-            font-size: 1rem;
-            color: #7f8c8d;
-            margin: 0 0 15px 0;
+        .header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        .badge {
+            background-color: #fef5e7;
+            color: #d35400;
+            font-size: 0.85rem;
+            font-weight: bold;
+            padding: 4px 10px;
+            border-radius: 20px;
         }
         .image-box {
             width: 100%;
-            border-radius: 10px;
+            border-radius: 12px;
             overflow: hidden;
             box-shadow: 0 3px 10px rgba(0,0,0,0.08);
-            margin-bottom: 18px;
+            margin-bottom: 14px;
             cursor: pointer;
             background-color: #eef2f5;
         }
@@ -46,10 +58,30 @@
             height: auto;
             display: block;
         }
+        .symptom-box {
+            text-align: left;
+            background-color: #eef7fc;
+            border-left: 5px solid #3498db;
+            padding: 12px 14px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            line-height: 1.55;
+        }
+        .symptom-title {
+            font-size: 0.9rem;
+            font-weight: bold;
+            color: #2980b9;
+            margin-bottom: 4px;
+        }
+        .symptom-text {
+            font-size: 1rem;
+            color: #2c3e50;
+            font-weight: 500;
+        }
         .prompt-text {
-            font-size: 0.95rem;
+            font-size: 0.9rem;
             color: #7f8c8d;
-            margin-bottom: 18px;
+            margin-bottom: 16px;
         }
         .answer-box {
             display: none;
@@ -59,7 +91,17 @@
             padding: 16px;
             border-radius: 8px;
             margin-bottom: 18px;
-            line-height: 1.6;
+            line-height: 1.65;
+        }
+        .category-tag {
+            display: inline-block;
+            background-color: #8e44ad;
+            color: white;
+            font-size: 0.82rem;
+            font-weight: bold;
+            padding: 3px 10px;
+            border-radius: 6px;
+            margin-bottom: 8px;
         }
         .formula-title {
             font-size: 1.5rem;
@@ -69,7 +111,7 @@
         }
         .info-row {
             margin-bottom: 8px;
-            font-size: 0.98rem;
+            font-size: 0.96rem;
             color: #2c3e50;
         }
         .info-row:last-child {
@@ -84,7 +126,7 @@
             color: white;
             border: none;
             padding: 14px 20px;
-            border-radius: 8px;
+            border-radius: 10px;
             font-size: 1.1rem;
             cursor: pointer;
             width: 100%;
@@ -99,14 +141,14 @@
             display: none;
         }
         #nextBtn:hover {
-            background-color: #2ecc71;
+            background-color: #219150;
         }
         .back-link {
-            display: inline-block;
-            margin-top: 20px;
+            display: block;
+            margin-top: 18px;
             color: #7f8c8d;
             text-decoration: none;
-            font-size: 0.9rem;
+            font-size: 0.95rem;
         }
         .back-link:hover {
             color: #2c3e50;
@@ -116,91 +158,245 @@
 <body>
 
     <div class="card">
-        <h1>睇圖提取：呢條係咩方劑？成份同主治係咩？</h1>
+        <div class="header-row">
+            <span class="badge">方劑圖像・君臣佐使特訓</span>
+            <span id="progressText" class="badge" style="background:#f0f3f4; color:#555;">1 / 20</span>
+        </div>
 
         <div class="image-box" onclick="revealAnswer()">
             <img id="formulaImg" src="" alt="方劑聯想圖">
         </div>
 
+        <div class="symptom-box">
+            <div class="symptom-title">🩺 臨床主治症狀：</div>
+            <div id="symptomText" class="symptom-text">載入中...</div>
+        </div>
+
         <div id="promptText" class="prompt-text">
-            💡 先喺腦入面諗出「方名、成份、功用、證型」，再撳下面揭曉答案
+            💡 結合圖畫同症狀，先喺腦入面講出「分類、方名、君臣佐使成份」，再撳下面揭曉！
         </div>
 
         <div id="answerBox" class="answer-box">
+            <div id="formulaCategory" class="category-tag"></div>
             <div id="formulaName" class="formula-title"></div>
             <div class="info-row"><span class="info-label">🌿 成份：</span><span id="formulaIngredients"></span></div>
             <div class="info-row"><span class="info-label">🎯 功用：</span><span id="formulaFunction"></span></div>
-            <div class="info-row"><span class="info-label">🩺 主治證型：</span><span id="formulaSyndrome"></span></div>
-            <div class="info-row"><span class="info-label">🍵 用法重點：</span><span id="formulaUsage"></span></div>
+            <div class="info-row"><span class="info-label">💡 君臣圖解：</span><span id="formulaLogic"></span></div>
+            <div class="info-row"><span class="info-label">🍵 用法／考點：</span><span id="formulaUsage"></span></div>
         </div>
 
         <button id="revealBtn" class="action-btn" onclick="revealAnswer()">揭曉答案 👀</button>
         <button id="nextBtn" class="action-btn" onclick="loadNextFormula()">下一條方劑 ➔</button>
 
-        <a href="index.html" class="back-link">← 返回主選單</a>
+        <a href="index.html" class="back-link" onclick="event.preventDefault(); window.location.href='index.html';">← 返回主選單</a>
     </div>
 
     <script>
         const formulaDatabase = [
             {
                 name: "白虎湯",
+                category: "清熱劑・清氣分熱",
                 image: "images/baihu.jpg",
+                symptoms: "陽明氣分熱盛證：四大症（大熱、大汗、大渴引飲、脈洪大有力）。",
                 ingredients: "石膏、知母、炙甘草、粳米",
                 func: "清熱生津",
-                syndrome: "陽明氣分熱盛證（大熱、大汗、大渴、脈洪大）",
+                logic: "君：石膏（配白虎噴冰氣，大清氣分實熱）；臣：知母（清熱滋陰）；佐：粳米（益胃護津）；使：炙甘草（調和諸藥）。",
                 usage: "水煎，煮至米熟湯成，去滓溫服。"
             },
             {
                 name: "桂枝湯",
+                category: "解表劑・辛溫解表",
                 image: "images/guizhi.jpg",
+                symptoms: "外感風寒表虛證：發熱頭痛、汗出惡風、鼻鳴乾嘔、脈浮緩。",
                 ingredients: "桂枝、芍藥、炙甘草、生薑、大棗",
                 func: "解肌發表，調和營衛",
-                syndrome: "外感風寒表虛證（發熱頭痛、汗出惡風、脈浮緩）",
+                logic: "君：桂枝（解肌發表散風寒）；臣：芍藥（益陰斂營，與桂枝一散一收）；佐：生薑、大棗（調和營衛脾胃）；使：炙甘草（調和諸藥）。",
                 usage: "溫服，服後啜熱稀粥以助藥力，溫覆令微汗出。"
             },
             {
                 name: "麻黃湯",
+                category: "解表劑・辛溫解表",
                 image: "images/mahuang.jpg",
+                symptoms: "外感風寒表實證：惡寒發熱、頭身疼痛、無汗而喘、舌苔薄白、脈浮緊。",
                 ingredients: "麻黃、桂枝、杏仁、炙甘草",
                 func: "發汗解表，宣肺平喘",
-                syndrome: "外感風寒表實證（惡寒發熱、頭身疼痛、無汗而喘、脈浮緊）",
+                logic: "君：麻黃（上方狂跑出汗，發汗解表）；臣：桂枝（幫手擦汗，助麻黃發汗解肌）；佐：杏仁（吹氣降肺氣平喘）；使：炙甘草（調和緩急）。",
                 usage: "先煮麻黃去上沫，再入諸藥同煎，溫服覆取微汗。"
             },
             {
                 name: "理中湯（理中丸）",
+                category: "溫裏劑・溫中祛寒",
                 image: "images/lizhong.jpg",
-                ingredients: "人參、乾薑、白朮、炙甘草",
+                symptoms: "脾胃虛寒證：脘腹綿綿作痛、喜溫喜按、畏寒肢冷、便溏不渴、脈沉細。",
+                ingredients: "乾薑、人參、白朮、炙甘草",
                 func: "溫中祛寒，補氣健脾",
-                syndrome: "脾胃虛寒證（脘腹綿綿作痛、畏寒肢冷、便溏不渴、脈沉細）",
-                usage: "水煎溫服（或作丸服，服湯後飲熱粥助陽氣）。"
+                logic: "君：乾薑（大溫中焦脾胃之寒）；臣：人參（補氣健脾）；佐：白朮（健脾燥濕）；使：炙甘草（益氣和中，調和諸藥）。",
+                usage: "水煎溫服，或作丸服；服後飲熱粥以助陽氣。"
             },
             {
                 name: "大承氣湯",
+                category: "瀉下劑・寒下",
                 image: "images/dachengqi.jpg",
+                symptoms: "陽明腑實證：痞、滿、燥、實四證俱全，大便不通、日晡潮熱、譫語、脈沉實。",
                 ingredients: "大黃、厚朴、枳實、芒硝",
                 func: "峻下熱結",
-                syndrome: "陽明腑實證（痞、滿、燥、實四證俱全，潮熱譫語、脈沉實）",
+                logic: "君：大黃（舉大泵配推泥車，瀉熱通便）；臣：芒硝（軟堅潤燥）；佐：厚朴、枳實（行氣散結消痞滿）。",
                 usage: "先煮厚朴、枳實，後下大黃，最後溶入芒硝溫服；得下餘勿服。"
             },
             {
                 name: "四逆湯",
+                category: "溫裏劑・回陽救逆",
                 image: "images/sini.jpg",
+                symptoms: "少陰病心腎陽虛欲脫證：四肢厥逆、惡寒蜷臥、神衰欲寐、下利清穀、脈微細。",
                 ingredients: "附子、乾薑、炙甘草",
                 func: "回陽救逆",
-                syndrome: "少陰病心腎陽虛欲脫證（四肢厥逆、惡寒蜷臥、下利清穀、脈微細）",
-                usage: "水煎溫服（臨床用附子須先煎久煎以減毒）。"
+                logic: "君：附子（配大火爐解凍，大辛大熱溫腎回陽）；臣：乾薑（揸火炬溫中助陽，附子無乾薑不熱）；使：炙甘草（益氣溫中，緩解附子毒性）。",
+                usage: "附子須先煎久煎以減毒，溫服。"
             },
             {
                 name: "苓桂朮甘湯",
+                category: "祛濕劑・溫化寒濕（化飲）",
                 image: "images/lingguizhugan.jpg",
+                symptoms: "中陽不足之痰飲證：胸脅支滿、目眩心悸、短氣而咳、舌苔白滑、脈弦滑。",
                 ingredients: "茯苓、桂枝、白朮、炙甘草",
                 func: "溫陽化飲，健脾利濕",
-                syndrome: "中陽不足之痰飲證（胸脅支滿、目眩心悸、短氣而咳、脈弦滑）",
-                usage: "水煎溫服，小便則利。"
+                logic: "君：茯苓（配抽水機，健脾滲濕利水）；臣：桂枝（溫陽化氣，平沖降逆）；佐：白朮（海綿健脾燥濕）；使：炙甘草（益氣和中）。",
+                usage: "水煎溫服，小便則利（病痰飲者，當以溫藥和之）。"
+            },
+            {
+                name: "六味地黃丸",
+                category: "補益劑・補陰",
+                image: "images/liuwei.jpg",
+                symptoms: "腎陰虛證：腰膝痠軟、頭暈目眩、耳鳴耳聾、盜汗遺精、骨蒸潮熱、手足心熱、舌紅少苔、脈細數。",
+                ingredients: "熟地黃、山茱萸、山藥、澤瀉、牡丹皮、茯苓",
+                func: "滋補肝腎",
+                logic: "三補三瀉！君：熟地黃（彎月水滴滋腎填精）；臣：山茱萸（補肝）、山藥（補脾）；佐：澤瀉（倒水瀉腎濁）、丹皮（撥火清相火）、茯苓（滲脾濕）。",
+                usage: "補中有瀉，以補為主；熟地配澤瀉、山萸配丹皮、山藥配茯苓。"
+            },
+            {
+                name: "四君子湯",
+                category: "補益劑・補氣",
+                image: "images/sijunzi.jpg",
+                symptoms: "脾胃氣虛證：面色萎白、語聲低微、氣短乏力、食少便溏、舌淡苔白、脈虛弱。",
+                ingredients: "人參、白朮、茯苓、炙甘草",
+                func: "益氣健脾",
+                logic: "君：人參（背後金色電池大補元氣）；臣：白朮（騷肌肉健脾燥濕）；佐：茯苓（水桶健脾滲濕）；使：炙甘草（益氣和中）。",
+                usage: "補氣基礎母方；加陳皮變異功散，再加半夏變六君子湯。"
+            },
+            {
+                name: "四物湯",
+                category: "補益劑・補血",
+                image: "images/siwu.jpg",
+                symptoms: "營血虛滯證：頭暈目眩、心悸失眠、面色無華、婦女月經不調、量少或經閉、唇爪無華、脈細弦。",
+                ingredients: "熟地黃、當歸、白芍、川芎",
+                func: "補血調血",
+                logic: "君：熟地黃（紅心燈籠大補陰血）；臣：當歸（補血活血調經）；佐：白芍（養血柔肝）；使：川芎（奔跑活血行氣，令全方補而不滯）。",
+                usage: "補血調血第一方，特點係「動靜結合，補而不滯」。"
+            },
+            {
+                name: "補中益氣湯",
+                category: "補益劑・補氣（升陽舉陷）",
+                image: "images/buzhong.jpg",
+                symptoms: "脾虛氣陷證：飲食減少、體倦肢軟、少氣懶言、久瀉久痢、脫肛、子宮脫垂，或氣虛發熱（身熱自汗、渴喜熱飲）。",
+                ingredients: "黃耆、人參、白朮、炙甘草、當歸、陳皮、升麻、柴胡",
+                func: "補中益氣，升陽舉陷",
+                logic: "君：黃耆（配上升熱氣球，大補中氣升陽）；臣：參朮草（健脾補氣）；佐：當歸、陳皮（和血理氣）；使：升麻、柴胡（拉氣球升舉下陷之清陽）。",
+                usage: "「甘溫除熱」代表方；升麻、柴胡用量宜輕，取其升提之性。"
+            },
+            {
+                name: "小柴胡湯",
+                category: "和解劑・和解少陽",
+                image: "images/xiaochaihu.jpg",
+                symptoms: "傷寒少陽證：往來寒熱、胸脅苦滿、默默不欲飲食、心煩喜嘔、口苦、咽乾、目眩、脈弦。",
+                ingredients: "柴胡、黃芩、人參、半夏、炙甘草、生薑、大棗",
+                func: "和解少陽",
+                logic: "君：柴胡（舉金色天秤，疏透少陽半表之邪）；臣：黃芩（噴冷霧清少陽半裏之熱）；佐：半夏生薑和胃降逆，人參大棗扶正祛邪；使：炙甘草。",
+                usage: "「但見一證便是，不必悉具」；柴胡用量須重於黃芩。"
+            },
+            {
+                name: "逍遙散",
+                category: "和解劑・調和肝脾",
+                image: "images/xiaoyao.jpg",
+                symptoms: "肝鬱血虛脾弱證：兩脅作痛、頭痛目眩、口燥咽乾、神疲食少、月經不調、乳房脹痛、脈弦而虛。",
+                ingredients: "柴胡、當歸、白芍、白朮、茯苓、炙甘草、煨生薑、薄荷",
+                func: "疏肝解鬱，養血健脾",
+                logic: "君：柴胡（雞毛掃撥走烏雲，疏肝解鬱）；臣：當歸、白芍（養血柔肝）；佐：白朮、茯苓健脾，薄荷助疏肝，煨薑和胃；使：炙甘草。",
+                usage: "肝鬱脾虛代表方；加丹皮、梔子即成「丹梔逍遙散」（加味逍遙散）。"
+            },
+            {
+                name: "銀翹散",
+                category: "解表劑・辛涼解表",
+                image: "images/yinqiao.jpg",
+                symptoms: "溫病初起（風熱表證）：發熱、微惡風寒、無汗或有汗不暢、頭痛口渴、咳嗽咽痛、舌尖紅、脈浮數。",
+                ingredients: "連翹、金銀花、桔梗、薄荷、竹葉、生甘草、荊芥穗、淡豆豉、牛蒡子、蘆根",
+                func: "辛涼透表，清熱解毒",
+                logic: "雙君：金銀花、連翹（噴清涼霧滅發熱火花，芳香辟穢清熱解毒）；臣：薄荷、牛蒡子（疏散風熱利咽）；佐：竹葉、桔梗等清熱宣肺；使：生甘草。",
+                usage: "「香氣大出，即取服，勿過煮」（辛涼平劑，不宜久煎）。"
+            },
+            {
+                name: "龍膽瀉肝湯",
+                category: "清熱劑・清臟腑熱",
+                image: "images/longdan.jpg",
+                symptoms: "肝膽實火上炎（頭痛目赤、脅痛口苦、耳聾耳腫）或肝經濕熱下注（陰腫陰癢、帶下黃臭、小便淋濁）。",
+                ingredients: "龍膽草、黃芩、梔子、澤瀉、木通、車前子、當歸、生地黃、柴胡、生甘草",
+                func: "清臟腑實火，清利肝經濕熱",
+                logic: "君：龍膽草（噴水滅肝火，大苦大寒清瀉肝膽實火與濕熱）；臣：黃芩、梔子（助清熱）；佐：澤瀉等利濕，當歸生地養陰防苦燥，柴胡引經；使：甘草。",
+                usage: "特點係「瀉中有補，降中寓升」，清熱利濕而不傷陰血。"
+            },
+            {
+                name: "黃連解毒湯",
+                category: "清熱劑・清熱解毒",
+                image: "images/huanglian.jpg",
+                symptoms: "三焦火毒熱盛證：大熱煩躁、口燥咽乾、錯語不眠、吐血衄血、熱病發斑、癰瘍疔毒、舌紅苔黃、脈數有力。",
+                ingredients: "黃連、黃芩、黃柏、梔子",
+                func: "瀉火解毒",
+                logic: "君：黃連（揸滅火筒，直瀉心火兼瀉中焦）；臣：黃芩（清上焦肺火）；佐：黃柏（清下焦腎火）；使：梔子（通瀉三焦之火，導熱下行）。",
+                usage: "苦寒直折三焦火毒嘅代表方，脾胃虛寒者忌用。"
+            },
+            {
+                name: "五苓散",
+                category: "祛濕劑・利水滲濕",
+                image: "images/wuling.jpg",
+                symptoms: "膀胱氣化不利之蓄水證：小便不利、頭痛微熱、煩渴欲飲、水入即吐（水逆證），或水腫、泄瀉。",
+                ingredients: "澤瀉、豬苓、茯苓、白朮、桂枝",
+                func: "利水滲濕，溫陽化氣",
+                logic: "君：澤瀉（扭開水喉，直達腎與膀胱利水滲濕）；臣：茯苓、豬苓（拎水桶增強利水）；佐：白朮（海綿健脾運濕）；使：桂枝（暖光溫陽化氣兼解表）。",
+                usage: "服後「多飲暖水，汗出愈」；若去桂枝即為「四苓散」。"
+            },
+            {
+                name: "二陳湯",
+                category: "祛痰劑・燥濕化痰",
+                image: "images/erchen.jpg",
+                symptoms: "濕痰證：咳嗽痰多、色白易咯、胸膈痞悶、噁心嘔吐、肢體困倦、舌苔白滑或膩、脈滑。",
+                ingredients: "半夏、橘紅（陳皮）、白茯苓、炙甘草（加生薑、烏梅）",
+                func: "燥濕化痰，理氣和中",
+                logic: "君：半夏（用風筒吹乾黏痰，燥濕化痰降逆）；臣：陳皮（撥扇理氣行滯，氣順則痰消）；佐：茯苓（海綿健脾滲濕，杜絕生痰之源）；使：炙甘草。",
+                usage: "治痰基礎母方；「二陳」指半夏與陳皮均以陳久者為佳。"
+            },
+            {
+                name: "半夏厚朴湯",
+                category: "理氣劑・行氣（梅核氣）",
+                image: "images/banxiahoupo.jpg",
+                symptoms: "梅核氣（痰氣互結證）：咽中如有物阻，咯之不出，吞之不下，胸脅滿悶，或咳或嘔，舌苔白潤或白膩，脈弦緩或弦滑。",
+                ingredients: "半夏、厚朴、茯苓、生薑、蘇葉",
+                func: "行氣散結，降逆化痰",
+                logic: "君：半夏（解開梅核死結，化痰散結降逆）；臣：厚朴（幫手拉開死結，行氣除滿）；佐：茯苓滲濕化痰，生薑和胃止嘔；使：紫蘇葉（芳香行氣舒鬱）。",
+                usage: "專治七情鬱結、痰氣交阻之「梅核氣」。"
+            },
+            {
+                name: "血府逐瘀湯",
+                category: "理血劑・活血祛瘀",
+                image: "images/xuefu.jpg",
+                symptoms: "胸中血瘀證：胸痛、頭痛日久不癒、痛如針刺而有定處、呃逆日久不止、內熱瞀悶、心悸失眠、急躁易怒、舌黯紅或有瘀斑、脈澀。",
+                ingredients: "桃仁、紅花、當歸、生地黃、川芎、赤芍、牛膝、桔梗、柴胡、枳殼、甘草",
+                func: "活血化瘀，行氣止痛",
+                logic: "雙君：桃仁、紅花（清走塞車瘀血，破血活血）；臣：當歸、川芎、赤芍、生地（養血活血不傷正）；佐：柴胡桔梗升清、枳殼牛膝降濁，升降氣機；使：甘草。",
+                usage: "即「桃紅四物湯」合「四逆散」加桔梗、牛膝；專治胸中血府瘀阻。"
             }
         ];
 
         let deck = [];
+        let completedCount = 0;
 
         function shuffleDeck() {
             deck = [...formulaDatabase];
@@ -208,6 +404,7 @@
                 const j = Math.floor(Math.random() * (i + 1));
                 [deck[i], deck[j]] = [deck[j], deck[i]];
             }
+            completedCount = 0;
         }
 
         function loadNextFormula() {
@@ -215,14 +412,18 @@
                 shuffleDeck();
             }
             const current = deck.pop();
+            completedCount++;
 
+            document.getElementById("progressText").textContent = `${completedCount} / ${formulaDatabase.length}`;
             document.getElementById("formulaImg").src = current.image;
             document.getElementById("formulaImg").alt = current.name;
+            document.getElementById("symptomText").textContent = current.symptoms;
 
+            document.getElementById("formulaCategory").textContent = `📚 ${current.category}`;
             document.getElementById("formulaName").textContent = current.name;
             document.getElementById("formulaIngredients").textContent = current.ingredients;
             document.getElementById("formulaFunction").textContent = current.func;
-            document.getElementById("formulaSyndrome").textContent = current.syndrome;
+            document.getElementById("formulaLogic").textContent = current.logic;
             document.getElementById("formulaUsage").textContent = current.usage;
 
             document.getElementById("promptText").style.display = "block";
