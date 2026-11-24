@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <link rel="manifest" href="manifest.json">
+    <title>每週病徵理法方穴特訓 (第1–2週)</title>
+    <style>
+        body {
+            font-family: "Microsoft JhengHei", -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: #f4f7f6;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            margin: 0;
+            padding: 16px 0 32px 0;
+            box-sizing: border-box;
+        }
+        .card {
+            background: white;
+            padding: 20px 18px;
+            border-radius: 16px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            width: 92%;
+            max-width: 520px;
+            box-sizing: border-box;
+        }
+        .header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        .badge {
+            background-color: #ebf5fb;
+            color: #1f618d;
+            font-size: 0.85rem;
+            font-weight: bold;
+            padding: 4px 10px;
+            border-radius: 20px;
+        }
+        .filter-bar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-bottom: 16px;
+        }
+        .filter-btn {
+            border: 1px solid #d5dbdb;
+            background: #f8f9f9;
+            color: #555;
+            padding: 6px 10px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            font-family: inherit;
+        }
+        .filter-btn.active {
+            background: #1f618d;
+            color: white;
+            border-color: #1f618d;
+            font-weight: bold;
+        }
+        .clue-box {
+            background-color: #f4f9fd;
+            border-left: 5px solid #1f618d;
+            padding: 14px;
+            border-radius: 8px;
+            margin-bottom: 14px;
+            line-height: 1.6;
+            color: #2c3e50;
+        }
+        .clue-title {
+            font-size: 0.88rem;
+            font-weight: bold;
+            color: #1f618d;
+            margin-bottom: 6px;
+        }
+        .clue-text {
+            font-size: 1.04rem;
+            font-weight: bold;
+        }
+        .step-box {
+            margin-bottom: 14px;
+            padding-bottom: 10px;
+            border-bottom: 1px dashed #e0e6ed;
+        }
+        .step-label {
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 8px;
+            font-size: 0.96rem;
+        }
+        .opt-btn {
+            display: block;
+            width: 100%;
+            text-align: left;
+            padding: 10px 12px;
+            margin-bottom: 7px;
+            border: 1.5px solid #dce4ec;
+            border-radius: 8px;
+            background: white;
+            font-size: 0.94rem;
+            color: #2c3e50;
+            cursor: pointer;
+            font-family: inherit;
+        }
+        .opt-btn.selected {
+            border-color: #1f618d;
+            background-color: #ebf5fb;
+            font-weight: bold;
+        }
+        .opt-btn.correct {
+            border-color: #27ae60;
+            background-color: #eafaf1;
+            color: #1e8449;
+            font-weight: bold;
+        }
+        .opt-btn.wrong {
+            border-color: #e74c3c;
+            background-color: #fdedec;
+            color: #c0392b;
+        }
+        .detail-box {
+            display: none;
+            background-color: #fef9e7;
+            border-left: 5px solid #f1c40f;
+            padding: 13px 14px;
+            border-radius: 8px;
+            font-size: 0.93rem;
+            color: #2c3e50;
+            line-height: 1.65;
+            margin-bottom: 14px;
+        }
+        .action-btn {
+            background-color: #1f618d;
+            color: white;
+            border: none;
+            padding: 14px 20px;
+            border-radius: 10px;
+            font-size: 1.08rem;
+            cursor: pointer;
+            width: 100%;
+            font-weight: bold;
+        }
+        #nextBtn {
+            background-color: #27ae60;
+            display: none;
+        }
+        .back-link {
+            display: block;
+            text-align: center;
+            margin-top: 18px;
+            color: #7f8c8d;
+            text-decoration: none;
+            font-size: 0.95rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="header-row">
+            <span class="badge">每週病徵理法方穴 (18證候)</span>
+            <span id="progressText" class="badge" style="background:#f0f3f4; color:#555;">第 1 / 18 題</span>
+        </div>
+
+        <div class="filter-bar">
+            <button class="filter-btn active" onclick="setWeek('全部', this)">全部 (18)</button>
+            <button class="filter-btn" onclick="setWeek('第1週', this)">第1週 (11/5–11/14)</button>
+            <button class="filter-btn" onclick="setWeek('第2週', this)">第2週 (11/15–11/21)</button>
+        </div>
+
+        <div class="clue-box">
+            <div id="weekTag" class="clue-title">關鍵表現（主症／舌脈）</div>
+            <div id="clueText" class="clue-text">載入中...</div>
+        </div>
+
+        <div id="stepsContainer"></div>
+        <div id="detailBox" class="detail-box"></div>
+
+        <button id="checkBtn" class="action-btn" onclick="checkAnswer()">核對證・法・方・穴 ✅</button>
+        <button id="nextBtn" class="action-btn" onclick="loadNext()">下一證候 ➔</button>
+
+        <a href="index.html" class="back-link" onclick="event.preventDefault(); window.location.href='index.html';">← 返回主選單</a>
+    </div>
+
+    <script>
+        const summaryBank = [
+            {
+                week: "第1週",
+                name: "1. 肝鬱化火（肝氣鬱結兼鬱熱）",
+                clue: "兩側脇肋脹痛、頻頻嘆氣、口苦咽乾、心煩急躁、失眠；舌紅苔薄黃，脈弦數。",
+                steps: [
+                    { q: "① 證候與理法：", opts: ["肝鬱化火 ➔ 疏肝理氣，清熱瀉火", "脾虛濕盛 ➔ 健脾益氣，滲濕和胃", "太陰病中焦虛寒 ➔ 溫中散寒，健脾益氣"], ans: 0 },
+                    { q: "② 代表方與穴位配伍：", opts: ["四逆散（演化：丹梔逍遙散／柴胡疏肝散）｜太衝、合谷、陽陵泉、行間", "四君子湯（兼濕：參苓白朮散／六君子湯）｜足三里、陰陵泉、三陰交、中脘", "理中丸／湯｜氣海、中脘、神闕（艾灸）"], ans: 0 }
+                ],
+                detail: "<strong>病因：</strong>情志抑鬱、工作壓力大。<br><strong>病機：</strong>肝失疏泄，氣機鬱滯，日久化火。<br><strong>重點：</strong>陽鬱氣滯手足微涼（不越肘膝）用四逆散；若心腎陽衰四肢厥逆、下利清穀則用四逆湯。"
+            },
+            {
+                week: "第1週",
+                name: "2. 脾虛濕盛（脾胃氣虛兼濕濁）",
+                clue: "胃脘痞悶隱痛、食慾不振、食後腹脹、神疲乏力、大便溏薄、面色萎黃；舌淡胖邊有齒痕、苔白膩，脈濡緩。",
+                steps: [
+                    { q: "① 證候與理法：", opts: ["脾虛濕盛 ➔ 健脾益氣，滲濕和胃", "心肝陰血不足、虛熱內擾 ➔ 養血安神，清熱除煩", "少陰寒化證 ➔ 回陽救逆，溫補腎脾"], ans: 0 },
+                    { q: "② 代表方與穴位配伍：", opts: ["四君子湯（兼濕盛：參苓白朮散、六君子湯）｜足三里、陰陵泉、三陰交、中脘", "酸棗仁湯｜神門、三陰交、內關", "四逆湯｜關元、神闕（隔鹽大灸）、腎俞"], ans: 0 }
+                ],
+                detail: "<strong>病因：</strong>熬夜過勞、飲食不定時傷脾。<br><strong>病機：</strong>脾氣虛弱，運化失職，水濕內停中焦。"
+            },
+            {
+                week: "第1週",
+                name: "3. 心肝陰血不足、虛熱內擾（失眠）",
+                clue: "入睡困難、易驚醒、虛煩不安、心悸頭暈、口乾不欲多飲、微盜汗；舌紅少苔，脈弦細數。",
+                steps: [
+                    { q: "① 證候與理法：", opts: ["心肝陰血不足、虛熱內擾 ➔ 養血安神，清熱除煩", "太陽中風表虛證 ➔ 解肌發表，調和營衛", "陽明經證氣分大熱 ➔ 辛寒清熱，生津止渴"], ans: 0 },
+                    { q: "② 代表方與穴位配伍：", opts: ["酸棗仁湯｜神門、三陰交、內關", "桂枝湯｜風池、大椎、合谷、外關、列缺", "白虎湯｜合谷、曲池（瀉法）、大椎"], ans: 0 }
+                ],
+                detail: "<strong>病因：</strong>長期思慮過度、熬夜耗傷心肝陰血。<br><strong>病機：</strong>心肝陰血虧虛，神不守舍，虛熱內擾。"
+            },
+            {
+                week: "第1週",
+                name: "4. 太陽中風表虛證（營衛不和）",
+                clue: "微熱、惡風、自汗出（汗出後熱不退）、頭痛、鼻塞流清涕、乾嘔；舌淡紅苔薄白，脈浮緩。",
+                steps: [
+                    { q: "① 證候與理法：", opts: ["太陽中風表虛證 ➔ 解肌發表，調和營衛", "邪熱壅肺實證 ➔ 辛涼宣泄，清肺平喘", "腎陰虧虛陰虛火旺 ➔ 滋補腎陰，清降虛火"], ans: 0 },
+                    { q: "② 代表方與穴位配伍：", opts: ["桂枝湯｜風池、大椎、合谷、外關、列缺", "麻杏石甘湯｜魚際、列缺、少商、尺澤、定喘", "六味地黃丸｜太溪、湧泉、腎俞、三陰交、照海"], ans: 0 }
+                ],
+                detail: "<strong>病因：</strong>外感風邪（吹冷氣受涼）。<br><strong>病機：</strong>風邪襲表，衛強營弱，營衛不和，肌表疏鬆。"
+            },
+            {
+                week: "第1週",
+                name: "5. 少陽病（半表半裡證）",
+                clue: "寒熱往來、胸脇苦滿、默默不欲飲食、心煩乾嘔、口苦、咽乾、目眩；舌紅苔薄白微黃，脈弦。",
+                steps: [
+                    { q: "① 證候與理法：", opts: ["少陽病半表半裡證 ➔ 和解少陽，疏通樞機", "狹義痰飲 ➔ 溫陽化飲，健脾利水", "太陰病中焦虛寒證 ➔ 溫中散寒，健脾益氣"], ans: 0 },
+                    { q: "② 代表方與穴位配伍：", opts: ["小柴胡湯｜足臨泣、外關、陽陵泉、三陰交", "苓桂朮甘湯｜陰陵泉、足三里、三陰交、中脘、內關", "理中丸／湯｜氣海、中脘、神闕（宜艾灸）"], ans: 0 }
+                ],
+                detail: "<strong>病因：</strong>外感表證不解，邪傳少陽樞機。<br><strong>病機：</strong>邪鬱少陽（半表半裡），樞機不利，膽火上炎。"
+            },
+            {
+                week: "第1週",
+                name: "6. 太陰病（中焦虛寒證）",
+                clue: "胃脘腹痛喜溫喜按、納呆、口淡不渴、大便稀溏（完穀不化）、畏寒肢冷；舌淡嫩苔白滑，脈沉遲無力。",
+                steps: [
+                    { q: "① 證候與理法：", opts: ["太陰病中焦虛寒證 ➔ 溫中散寒，健脾益氣", "陽明經證氣分大熱 ➔ 辛寒清熱，生津止渴", "肝鬱化火 ➔ 疏肝理氣，清熱瀉火"], ans: 0 },
+                    { q: "② 代表方與穴位配伍：", opts: ["理中丸／湯｜氣海、中脘、神闕（宜艾灸）", "白虎湯｜合谷、曲池（瀉法）、大椎", "四逆散｜太衝、合谷、陽陵泉、行間"], ans: 0 }
+                ],
+                detail: "<strong>病因：</strong>素體脾胃虛弱，復感飲食生冷。<br><strong>病機：</strong>中焦脾陽虛衰，陰寒內生，運化失職。"
+            },
+            {
+                week: "第1週",
+                name: "7. 陽明經證（氣分大熱）",
+                clue: "高熱大熱、不惡寒反惡熱、大汗淋漓、大渴喜冷飲、面紅心煩、腹軟便通；舌紅苔黃燥，脈洪大有力。",
+                steps: [
+                    { q: "① 證候與理法：", opts: ["陽明經證（氣分大熱）➔ 辛寒清熱，生津止渴", "少陰寒化證 ➔ 回陽救逆，溫補腎脾", "脾虛濕盛 ➔ 健脾益氣，滲濕和胃"], ans: 0 },
+                    { q: "② 代表方與穴位配伍：", opts: ["白虎湯｜合谷、曲池（瀉法）、大椎", "四逆湯｜關元、神闕（隔鹽大灸）、腎俞", "四君子湯｜足三里、陰陵泉、三陰交、中脘"], ans: 0 }
+                ],
+                detail: "<strong>病因：</strong>外邪入裡化熱，邪熱充斥陽明氣分。<br><strong>病機：</strong>陽明氣分實熱熾盛，熱逼津傷（腹軟便通、無燥屎，別於陽明腑證）。"
+            },
+            {
+                week: "第1週",
+                name: "8. 少陰寒化證（心腎陽衰）",
+                clue: "四肢厥冷（過肘膝）、精神萎靡但欲寐、畏寒蜷臥、下利清穀、小便清長；舌淡白胖嫩苔白滑，脈微細欲絕。",
+                steps: [
+                    { q: "① 證候與理法：", opts: ["少陰寒化證 ➔ 回陽救逆，溫補腎脾", "心肝陰血不足、虛熱內擾 ➔ 養血安神，清熱除煩", "邪熱壅肺實證 ➔ 辛涼宣泄，清肺平喘"], ans: 0 },
+                    { q: "② 代表方與穴位配伍：", opts: ["四逆湯｜關元、神闕（隔鹽大灸）、腎俞", "酸棗仁湯｜神門、三陰交、內關", "麻杏石甘湯｜魚際、列缺、少商、尺澤、定喘"], ans: 0 }
+                ],
+                detail: "<strong>病因：</strong>素體陽虛，外感寒邪直中少陰。<br><strong>病機：</strong>心腎陽氣衰微，陰寒內盛，陽氣欲脫。"
+            },
+            {
+                week: "第1週",
+                name: "9. 狹義痰飲（脾陽虛水停中焦）",
+                clue: "心下逆滿、胸脇支滿、心悸、頭暈目眩、短氣乏力、口不渴（或渴不欲飲）、小便少；舌淡胖齒痕苔白滑水潤，脈弦滑。",
+                steps: [
+                    { q: "① 證候與理法：", opts: ["狹義痰飲 ➔ 溫陽化飲，健脾利水", "太陽中風表虛證 ➔ 解肌發表，調和營衛", "腎陰虧虛陰虛火旺 ➔ 滋補腎陰，清降虛火"], ans: 0 },
+                    { q: "② 代表方與穴位配伍：", opts: ["苓桂朮甘湯｜陰陵泉、足三里、三陰交、中脘、內關", "桂枝湯｜風池、大椎、合谷、外關、列缺", "六味地黃丸｜太溪、湧泉、腎俞、三陰交、照海"], ans: 0 }
+                ],
+                detail: "<strong>病因：</strong>素體脾陽不足，水液運化失常。<br><strong>病機：</strong>中陽不振，水飲停聚心下，上衝心胸清竅。"
+            },
+            {
+                week: "第1週",
+                name: "10. 邪熱壅肺（肺熱咳喘實證）",
+                clue: "發熱、咳嗽劇烈、氣促作喘（鼻翼煽動）、咳黃稠黏痰、口渴、微有汗出而喘熱不退；舌紅苔黃，脈滑數。",
+                steps: [
+                    { q: "① 證候與理法：", opts: ["邪熱壅肺（肺熱咳喘實證）➔ 辛涼宣泄，清肺平喘", "少陽病半表半裡證 ➔ 和解少陽，疏通樞機", "太陰病中焦虛寒證 ➔ 溫中散寒，健脾益氣"], ans: 0 },
+                    { q: "② 代表方與穴位配伍：", opts: ["麻杏石甘湯｜魚際、列缺、少商（放血）、尺澤、定喘", "小柴胡湯｜足臨泣、外關、陽陵泉、三陰交", "理中丸／湯｜氣海、中脘、神闕（宜艾灸）"], ans: 0 }
+                ],
+                detail: "<strong>病因：</strong>外感表邪入裡化熱，壅遏肺氣。<br><strong>病機：</strong>邪熱壅肺，肺失宣發與肅降。"
+            },
+            {
+                week: "第1週",
+                name: "11. 腎陰虧虛（陰虛火旺）",
+                clue: "腰膝痠軟無力、頭暈耳鳴、五心煩熱、骨蒸潮熱、夜間盜汗、口燥咽乾、健忘失眠；舌紅少苔，脈細數。",
+                steps: [
+                    { q: "① 證候與理法：", opts: ["腎陰虧虛（陰虛火旺）➔ 滋補腎陰，清降虛火", "陽明經證氣分大熱 ➔ 辛寒清熱，生津止渴", "肝鬱化火 ➔ 疏肝理氣，清熱瀉火"], ans: 0 },
+                    { q: "② 代表方與穴位配伍：", opts: ["六味地黃丸｜太溪、湧泉、腎俞、三陰交、照海", "白虎湯｜合谷、曲池（瀉法）、大椎", "四逆散｜太衝、合谷、陽陵泉、行間"], ans: 0 }
+                ],
+                detail: "<strong>病因：</strong>長期熬夜、勞累過度，耗傷腎精陰液。<br><strong>病機：</strong>腎陰虧虛，水不制火，虛熱內生。"
+            },
+            {
+                week: "第2週",
+                name: "1. 氣滯血瘀（胸中血府血瘀）",
+                clue: "胸悶痛如針刺、痛處固定不移、夜間痛甚、心悸失眠、急躁易怒、但欲漱水不欲嚥；舌紫暗邊有瘀斑，脈澀（或弦澀）。",
+                steps: [
+                    { q: "① 證候與理法：", opts: ["氣滯血瘀（胸中血府血瘀）➔ 活血化瘀，行氣止痛", "脾虛氣陷（中氣下陷）➔ 補中益氣，升陽舉陷", "濕溫初起 ➔ 宣暢氣機，清利濕熱"], ans: 0 },
+                    { q: "② 代表方與穴位配伍：", opts: ["血府逐瘀湯｜膈俞（血會）、血海、內關、膻中（氣會）", "補中益氣湯｜百會（溫灸升提）、氣海、關元、足三里", "三仁湯｜陰陵泉、足三里、三陰交、豐隆、中脘"], ans: 0 }
+                ],
+                detail: "<strong>病因：</strong>長期高壓情志鬱結、舊傷未癒。<br><strong>病機：</strong>氣機不暢，血行瘀阻於胸中血府。"
+            },
+            {
+                week: "第2週",
+                name: "2. 溫病衛分證（風熱犯肺衛）",
+                clue: "發熱重、惡寒輕、咽喉紅腫劇痛、口微渴、微汗不暢、咳嗽痰黏偏黃；舌尖邊紅、苔薄白微黃，脈浮數。",
+                steps: [
+                    { q: "① 證候與理法：", opts: ["溫病衛分證（風熱犯肺衛）➔ 辛涼透表，清熱解毒", "陽明腑實證 ➔ 峻下熱結，釜底抽薪", "肝脾不調 ➔ 抑木扶土"], ans: 0 },
+                    { q: "② 代表方與穴位配伍：", opts: ["銀翹散｜風池、外關、合谷、少商（點刺放血利咽）", "大承氣湯｜天樞、上巨虛、支溝、足三里", "痛瀉要方｜太衝、足三里、中脘"], ans: 0 }
+                ],
+                detail: "<strong>病因：</strong>外感風熱溫邪（首犯上焦肺衛）。<br><strong>病機：</strong>風熱襲表，肺衛失宣，熱毒上攻咽喉。"
+            },
+            {
+                week: "第2週",
+                name: "3. 脾虛氣陷（中氣下陷）",
+                clue: "少氣懶言、神疲乏力、頭暈眼花、食慾欠佳、腹脹便溏、小腹重墜感（勞累久站加重、平臥減輕）；舌淡胖苔薄白，脈細弱無力。",
+                steps: [
+                    { q: "① 證候與理法：", opts: ["脾虛氣陷（中氣下陷）➔ 補中益氣，升陽舉陷", "心脾兩虛證 ➔ 益氣補血，健脾養心", "氣滯血瘀 ➔ 活血化瘀，行氣止痛"], ans: 0 },
+                    { q: "② 代表方與穴位配伍：", opts: ["補中益氣湯｜百會（溫灸升提）、氣海、關元、足三里", "歸脾湯｜神門、足三里、三陰交、心俞、脾俞", "血府逐瘀湯｜膈俞、血海、內關、膻中"], ans: 0 }
+                ],
+                detail: "<strong>病因：</strong>勞累過度、長期站立用氣傷脾。<br><strong>病機：</strong>脾主升清功能失常，清陽不升，中氣下陷。"
+            },
+            {
+                week: "第2週",
+                name: "4. 陽明腑實證（裡實熱結）",
+                clue: "連續多日不大便、腹部硬滿脹痛且拒按、日晡潮熱、手足心汗出、心煩讝語、口乾口臭；舌紅苔老黃厚燥，脈沉實有力。",
+                steps: [
+                    { q: "① 證候與理法：", opts: ["陽明腑實證（裡實熱結）➔ 峻下熱結，釜底抽薪", "濕溫初起 ➔ 宣暢氣機，清利濕熱", "溫病衛分證 ➔ 辛涼透表，清熱解毒"], ans: 0 },
+                    { q: "② 代表方與穴位配伍：", opts: ["大承氣湯｜天樞、上巨虛、支溝、足三里", "三仁湯｜陰陵泉、足三里、三陰交、豐隆、中脘", "銀翹散｜風池、外關、合谷、少商"], ans: 0 }
+                ],
+                detail: "<strong>病因：</strong>外感邪熱入裡，與腸道糟粕搏結。<br><strong>病機：</strong>燥屎內結於陽明大腸，腑氣不通（「痞、滿、燥、實」）。"
+            },
+            {
+                week: "第2週",
+                name: "5. 濕溫初起（濕重於熱，三焦濕遏）",
+                clue: "頭重如裹、全身困重痠痛、胸悶不飢、午後低熱（身熱不揚、汗出熱不退）、大便黏膩；舌淡紅苔白厚膩，脈濡。",
+                steps: [
+                    { q: "① 證候與理法：", opts: ["濕溫初起 ➔ 宣暢氣機，清利濕熱（宣上、暢中、滲下）", "肝脾不調 ➔ 抑木扶土", "心脾兩虛證 ➔ 益氣補血，健脾養心"], ans: 0 },
+                    { q: "② 代表方與穴位配伍：", opts: ["三仁湯｜陰陵泉、足三里、三陰交、豐隆、中脘", "痛瀉要方｜太衝、足三里、中脘", "歸脾湯｜神門、足三里、三陰交、心俞、脾俞"], ans: 0 }
+                ],
+                detail: "<strong>病因：</strong>感受外濕（陰雨潮濕）夾內濕與微熱。<br><strong>病機：</strong>濕邪重濁黏膩，阻遏三焦氣機，熱為濕遏。"
+            },
+            {
+                week: "第2週",
+                name: "6. 肝脾不調（木旺乘土／痛瀉）",
+                clue: "情緒緊張即腸鳴腹痛、痛則欲瀉、瀉必腹痛、胸脇微悶、嘆氣；舌淡紅苔薄白，脈兩關不調（左關弦、右關緩弱）。",
+                steps: [
+                    { q: "① 證候與理法：", opts: ["肝脾不調（木旺乘土／痛瀉）➔ 抑木扶土（補脾柔肝，祛濕止瀉）", "脾虛氣陷 ➔ 補中益氣，升陽舉陷", "陽明腑實證 ➔ 峻下熱結"], ans: 0 },
+                    { q: "② 代表方與穴位配伍：", opts: ["痛瀉要方｜太衝、足三里、中脘", "補中益氣湯｜百會、氣海、關元、足三里", "大承氣湯｜天樞、上巨虛、支溝、足三里"], ans: 0 }
+                ],
+                detail: "<strong>病因：</strong>情志壓力、飲食勞倦。<br><strong>病機：</strong>肝鬱氣滯，木旺乘土（五行相乘），脾失健運。"
+            },
+            {
+                week: "第2週",
+                name: "7. 心脾兩虛證（氣血兩虛／脾不統血）",
+                clue: "失眠多夢易醒、心悸怔忡、健忘、神疲乏力、食慾不振、便溏、頭暈、皮下瘀青或經量多色淡；舌淡白胖嫩苔薄白，脈細弱無力。",
+                steps: [
+                    { q: "① 證候與理法：", opts: ["心脾兩虛證（氣血兩虛／脾不統血）➔ 益氣補血，健脾養心", "氣滯血瘀 ➔ 活血化瘀，行氣止痛", "濕溫初起 ➔ 宣暢氣機，清利濕熱"], ans: 0 },
+                    { q: "② 代表方與穴位配伍：", opts: ["歸脾湯｜神門、足三里、三陰交、心俞、脾俞", "血府逐瘀湯｜膈俞、血海、內關、膻中", "三仁湯｜陰陵泉、足三里、三陰交、豐隆、中脘"], ans: 0 }
+                ],
+                detail: "<strong>病因：</strong>長期思慮過度、用腦勞神。<br><strong>病機：</strong>思慮傷脾，氣血生化不足，心神失養；兼脾氣虛不統血。"
+            }
+        ];
+
+        let activePool = [...summaryBank];
+        let currentIndex = 0;
+        let selectedAns = [null, null];
+
+        function setWeek(week, btn) {
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            activePool = week === '全部' ? [...summaryBank] : summaryBank.filter(x => x.week === week);
+            currentIndex = 0;
+            loadNext();
+        }
+
+        function shuffle(arr) {
+            const copy = [...arr];
+            for (let i = copy.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [copy[i], copy[j]] = [copy[j], copy[i]];
+            }
+            return copy;
+        }
+
+        function loadNext() {
+            const item = activePool[currentIndex % activePool.length];
+            currentIndex++;
+            selectedAns = [null, null];
+
+            document.getElementById('progressText').textContent = `第 ${((currentIndex - 1) % activePool.length) + 1} / ${activePool.length} 題`;
+            document.getElementById('weekTag').textContent = `${item.week}・關鍵表現（主症／舌脈）`;
+            document.getElementById('clueText').textContent = item.clue;
+
+            const container = document.getElementById('stepsContainer');
+            container.innerHTML = '';
+
+            item.steps.forEach((st, sIdx) => {
+                const div = document.createElement('div');
+                div.className = 'step-box';
+                div.innerHTML = `<div class="step-label">${st.q}</div>`;
+
+                const opts = shuffle(st.opts.map((text, idx) => ({ text, isCorrect: idx === st.ans })));
+                opts.forEach(op => {
+                    const btn = document.createElement('button');
+                    btn.className = 'opt-btn';
+                    btn.textContent = op.text;
+                    btn.dataset.step = sIdx;
+                    btn.dataset.correct = op.isCorrect;
+                    btn.onclick = () => {
+                        selectedAns[sIdx] = op.isCorrect;
+                        div.querySelectorAll('.opt-btn').forEach(b => b.classList.remove('selected'));
+                        btn.classList.add('selected');
+                    };
+                    div.appendChild(btn);
+                });
+                container.appendChild(div);
+            });
+
+            document.getElementById('detailBox').style.display = 'none';
+            document.getElementById('checkBtn').style.display = 'block';
+            document.getElementById('nextBtn').style.display = 'none';
+        }
+
+        function checkAnswer() {
+            const item = activePool[(currentIndex - 1) % activePool.length];
+            item.steps.forEach((st, sIdx) => {
+                const btns = document.querySelectorAll(`.opt-btn[data-step="${sIdx}"]`);
+                btns.forEach(b => {
+                    b.disabled = true;
+                    const isCorrect = b.dataset.correct === 'true';
+                    if (isCorrect) {
+                        b.classList.add('correct');
+                    } else if (b.classList.contains('selected')) {
+                        b.classList.add('wrong');
+                    }
+                });
+            });
+
+            const box = document.getElementById('detailBox');
+            box.innerHTML = `<strong>📌 完整對照（${item.name}）：</strong><br>${item.detail}`;
+            box.style.display = 'block';
+            document.getElementById('checkBtn').style.display = 'none';
+            document.getElementById('nextBtn').style.display = 'block';
+        }
+
+        window.onload = loadNext;
+    </script>
+</body>
+</html>
